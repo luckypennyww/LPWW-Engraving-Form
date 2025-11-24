@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Font Preview Tool</title>
+  <style>
+    /* Main font for the page and input */
+    @font-face {
+      font-family: "MainFont";
+      src: url("BebasNeue-Regular.ttf") format("truetype");
+    }
+
+    /* Preview fonts */
+    @font-face {
+      font-family: "PreviewFont1";
+      src: url("longtail.ttf") format("truetype");
+    }
+    @font-face {
+      font-family: "PreviewFont2";
+      src: url("brittany-signature-script.regular.ttf") format("truetype");
+    }
+    @font-face {
+      font-family: "PreviewFont3";
+      src: url("kugile.regular.ttf") format("truetype");
+    }
+    @font-face {
+      font-family: "PreviewFont4";
+      src: url("mochademo.mocha-demo.ttf") format("truetype");
+    }
+    @font-face {
+      font-family: "PreviewFont5";
+      src: url("Berista.ttf") format("truetype");
+    }
+
+    body {
+      font-family: "MainFont", sans-serif;
+      padding: 30px;
+      max-width: 700px;
+      margin: auto;
+    }
+
+    input {
+      width: 100%;
+      font-size: 22px;
+      padding: 12px;
+      margin-bottom: 30px;
+      font-family: "MainFont", sans-serif;
+    }
+
+    .preview-block {
+      margin-bottom: 25px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #fafafa;
+    }
+
+    .preview {
+      font-size: 40px;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <h2>Type your text to preview:</h2>
+  <input id="nameInput" placeholder="Type here…" oninput="updatePreviews()">
+
+  <div class="preview-block">
+    <strong>Font 1:</strong>
+    <div id="prev1" class="preview" style="font-family: 'PreviewFont1';"></div>
+  </div>
+
+  <div class="preview-block">
+    <strong>Font 2:</strong>
+    <div id="prev2" class="preview" style="font-family: 'PreviewFont2';"></div>
+  </div>
+
+  <div class="preview-block">
+    <strong>Font 3:</strong>
+    <div id="prev3" class="preview" style="font-family: 'PreviewFont3';"></div>
+  </div>
+
+  <div class="preview-block">
+    <strong>Font 4:</strong>
+    <div id="prev4" class="preview" style="font-family: 'PreviewFont4';"></div>
+  </div>
+
+  <div class="preview-block">
+    <strong>Font 5:</strong>
+    <div id="prev5" class="preview" style="font-family: 'PreviewFont5';"></div>
+  </div>
+
+  <script>
+    function updatePreviews() {
+      const text = document.getElementById('nameInput').value;
+      document.getElementById('prev1').textContent = text;
+      document.getElementById('prev2').textContent = text;
+      document.getElementById('prev3').textContent = text;
+      document.getElementById('prev4').textContent = text;
+      document.getElementById('prev5').textContent = text;
+    }
+  </script>
+</body>
+</html>

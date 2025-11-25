@@ -5,10 +5,7 @@
   <title>Engraving Preview — LPWW</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    /* -------------------------
-       Replace these file names
-       with the exact ones you uploaded
-       ------------------------- */
+    /* Fonts */
     @font-face { font-family: "PreviewFont1"; src: url("longtail.ttf") format("truetype"); }
     @font-face { font-family: "PreviewFont2"; src: url("brittany-signature-script.regular.ttf") format("truetype"); }
     @font-face { font-family: "PreviewFont3"; src: url("kugile.regular.ttf") format("truetype"); }
@@ -16,111 +13,31 @@
     @font-face { font-family: "PreviewFont5"; src: url("Berista.ttf") format("truetype"); }
     @font-face { font-family: "MainFont"; src: url("BebasNeue-Regular.ttf") format("truetype"); }
 
-    :root{
-      --page-max-width: 900px;
-      --ui-gap: 12px;
-      --preview-bg: #fafafa;
-    }
-
-    body{
-      font-family: "MainFont", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    body {
+      font-family: "MainFont", system-ui, sans-serif;
       margin: 18px;
       display: flex;
       justify-content: center;
     }
 
-    .container{
-      width: 100%;
-      max-width: var(--page-max-width);
-    }
-
+    .container { width: 100%; max-width: 900px; }
     h1 { font-size: 20px; margin: 6px 0 18px 0; }
     label { display:block; margin-bottom:6px; font-weight:600; }
-    .row { display:flex; gap:var(--ui-gap); align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+    .row { display:flex; gap:12px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
     .col { flex: 1 1 220px; min-width: 220px; }
-
-    .controls {
-      padding: 12px;
-      border-radius: 8px;
-      background: #fff;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-      margin-bottom: 18px;
-    }
-
-    input[type="text"], select, textarea {
-      width:100%;
-      padding:10px;
-      font-size:16px;
-      border:1px solid #ddd;
-      border-radius:6px;
-      box-sizing:border-box;
-      font-family: inherit;
-    }
-
-    .preview-area {
-      position: relative;
-      background: var(--preview-bg);
-      border: 1px solid #e5e5e5;
-      border-radius: 10px;
-      overflow: hidden;
-      max-width:100%;
-    }
-
-    .image-wrapper {
-      width:100%;
-      display:block;
-      position: relative;
-      /* maintain aspect, image will scale to width */
-      background: #fff;
-    }
-
-    .image-wrapper img {
-      display:block;
-      width:100%;
-      height:auto;
-      user-select: none;
-      -webkit-user-drag: none;
-    }
-
-    /* Overlay text element */
-    .overlay {
-      position: absolute;
-      white-space: pre-wrap;
-      word-break: break-word;
-      color: #000;
-      /* initial transforms and centering handled in JS */
-      transform: translate(-50%, -50%);
-      pointer-events: none; /* not draggable in this mode */
-      text-align: center;
-    }
-
-    /* small UI bits */
-    .muted { color:#666; font-size:13px; }
-    .btn {
-      display:inline-block;
-      padding:10px 14px;
-      background:#0b76ef;
-      color:#fff;
-      border-radius:6px;
-      text-decoration:none;
-      cursor:pointer;
-      border:none;
-    }
+    input[type="text"], select, textarea { width:100%; padding:10px; font-size:16px; border:1px solid #ddd; border-radius:6px; font-family: inherit; box-sizing:border-box; }
+    .preview-area { position: relative; background: #fafafa; border:1px solid #e5e5e5; border-radius:10px; overflow:hidden; max-width:100%; }
+    .image-wrapper { width:100%; position: relative; }
+    .image-wrapper img { display:block; width:100%; height:auto; user-select:none; -webkit-user-drag:none; }
+    .overlay { position: absolute; white-space: pre-wrap; word-break: break-word; color: #000; transform: translate(-50%, -50%); pointer-events: none; text-align:center; }
+    .btn { display:inline-block; padding:10px 14px; background:#0b76ef; color:#fff; border-radius:6px; text-decoration:none; cursor:pointer; border:none; }
     .btn.secondary { background:#666; }
     .small { padding:6px 8px; font-size:14px; }
-
-    .form-footer { display:flex; gap:12px; align-items:center; margin-top:12px; flex-wrap:wrap; }
-    .note { font-size:13px; color:#444; }
-
-    /* responsive */
-    @media (max-width:720px){
-      .row { flex-direction: column; }
-    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Engraving preview</h1>
+    <h1>Engraving Preview</h1>
 
     <div class="controls">
       <div class="row">
@@ -128,23 +45,20 @@
           <label for="textInput">Text to engrave</label>
           <input id="textInput" type="text" placeholder="Type the text exactly as you want it" oninput="updatePreview()" />
         </div>
-
         <div style="width:160px;">
           <label for="fontSelect">Choose font</label>
           <select id="fontSelect" onchange="updatePreview()">
-            <option value="PreviewFont1">PreviewFont1 (longtail)</option>
-            <option value="PreviewFont2">PreviewFont2 (brittany)</option>
-            <option value="PreviewFont3">PreviewFont3 (kugile)</option>
-            <option value="PreviewFont4">PreviewFont4 (mochademo)</option>
-            <option value="PreviewFont5">PreviewFont5 (Berista)</option>
+            <option value="PreviewFont1">PreviewFont1</option>
+            <option value="PreviewFont2">PreviewFont2</option>
+            <option value="PreviewFont3">PreviewFont3</option>
+            <option value="PreviewFont4">PreviewFont4</option>
+            <option value="PreviewFont5">PreviewFont5</option>
           </select>
         </div>
-
         <div style="width:160px;">
           <label for="sizeRange">Font size</label>
           <input id="sizeRange" type="range" min="18" max="120" value="48" oninput="updatePreview()" />
         </div>
-
         <div style="width:140px;">
           <label for="colorInput">Color</label>
           <input id="colorInput" type="color" value="#000000" onchange="updatePreview()" />
@@ -158,69 +72,26 @@
             <option value="top-left">Top Left</option>
             <option value="top-center">Top Center</option>
             <option value="top-right">Top Right</option>
-
             <option value="center-left">Center Left</option>
             <option value="center">Center</option>
             <option value="center-right">Center Right</option>
-
             <option value="bottom-left">Bottom Left</option>
             <option value="bottom-center">Bottom Center</option>
             <option value="bottom-right">Bottom Right</option>
           </select>
         </div>
-
-        <div class="col" style="min-width:320px;">
-          <label>Preview image URL (auto-loaded if you include ?img= on the page link)</label>
-          <input id="imageURL" type="text" placeholder="Paste image URL here (or use link with ?img=...)" oninput="loadImageFromInput()" />
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col">
-          <label for="notes">Any special instructions (optional)</label>
-          <textarea id="notes" rows="2" placeholder="e.g. All caps, small engraving, center alignment"></textarea>
-        </div>
-
-        <div style="min-width:220px;">
-          <label>&nbsp;</label>
-          <div style="display:flex; gap:8px;">
-            <button class="btn" onclick="submitForm()">Submit engraving</button>
-            <button class="btn secondary" onclick="copySubmission()">Copy submission</button>
-            <button class="btn small" onclick="resetPreview()">Reset</button>
-          </div>
-        </div>
       </div>
     </div>
 
-    <!-- Preview area -->
     <div class="preview-area" style="margin-top:18px;">
-      <div class="image-wrapper" id="imageWrapper" style="width:100%;">
-        <img id="productImage" src="" alt="Product image preview" />
+      <div class="image-wrapper">
+        <img id="productImage" src="" alt="Board preview" />
         <div id="overlayText" class="overlay">Your text</div>
       </div>
     </div>
-
-    <p class="muted" style="margin-top:10px;">
-      Usage: Send customers a link like:
-      <br>
-      <code style="font-size:13px; background:#fff; padding:4px; border-radius:4px;">
-        https://<em>your-username</em>.github.io/<em>your-repo</em>/?img=<em>ENCODED_IMAGE_URL</em>
-      </code>
-      <br>
-      Encode the image URL with <code>encodeURIComponent()</code> when building the link.
-    </p>
   </div>
 
   <script>
-    // -------------------------------
-    // Utility to read ?img= parameter
-    // -------------------------------
-    function getQueryParam(name) {
-      const params = new URLSearchParams(window.location.search);
-      return params.get(name);
-    }
-
-    // initialize elements
     const productImage = document.getElementById('productImage');
     const overlayText = document.getElementById('overlayText');
     const txtInput = document.getElementById('textInput');
@@ -228,37 +99,18 @@
     const sizeRange = document.getElementById('sizeRange');
     const colorInput = document.getElementById('colorInput');
     const placementSelect = document.getElementById('placementSelect');
-    const imageURLInput = document.getElementById('imageURL');
-    const notesInput = document.getElementById('notes');
 
-    // default
-    overlayText.style.fontFamily = fontSelect.value;
-    overlayText.style.fontSize = sizeRange.value + 'px';
-    overlayText.style.color = colorInput.value;
+    // Map IDs to image URLs (update this as you upload new images)
+    const images = {
+      "123": "boards/board123.jpg",
+      "124": "boards/board124.jpg",
+      "125": "boards/board125.jpg"
+    };
 
-    // on load, try to read ?img=
-    window.addEventListener('load', () => {
-      const imgParam = getQueryParam('img');
-      if (imgParam) {
-        // decode if needed (some links will be already encoded)
-        const decoded = decodeURIComponent(imgParam);
-        productImage.src = decoded;
-        imageURLInput.value = decoded;
-      } else {
-        // fallback placeholder image (replace with a neutral image if you want)
-        productImage.src = '';
-      }
-      applyPlacement(); // position overlay
-      updatePreview();
-    });
-
-    // if user pastes image into field
-    function loadImageFromInput(){
-      const v = imageURLInput.value.trim();
-      productImage.src = v || '';
+    function getQueryParam(name) {
+      return new URLSearchParams(window.location.search).get(name);
     }
 
-    // update preview text/font/size/color
     function updatePreview(){
       const t = txtInput.value || ' ';
       overlayText.textContent = t;
@@ -268,16 +120,36 @@
       applyPlacement();
     }
 
-    // apply one of 9 placements by setting top/left + transform anchors & text-align
     function applyPlacement(){
       const pos = placementSelect.value;
-      // default center
-      let top = '50%'; let left = '50%';
-      let translateX = '-50%'; let translateY = '-50%';
-      let textAlign = 'center';
-
+      let top = '50%', left='50%', translateX='-50%', translateY='-50%', textAlign='center';
       switch(pos){
-        case 'top-left':
-          top = '7%'; left = '7%'; translateX = '0%'; translateY = '0%'; textAlign='left'; break;
-        case 'top-center':
-          top =
+        case 'top-left': top='7%'; left='7%'; translateX='0%'; translateY='0%'; textAlign='left'; break;
+        case 'top-center': top='7%'; left='50%'; translateX='-50%'; translateY='0%'; break;
+        case 'top-right': top='7%'; left='93%'; translateX='-100%'; translateY='0%'; textAlign='right'; break;
+        case 'center-left': top='50%'; left='7%'; translateX='0%'; translateY='-50%'; textAlign='left'; break;
+        case 'center': break;
+        case 'center-right': top='50%'; left='93%'; translateX='-100%'; translateY='-50%'; textAlign='right'; break;
+        case 'bottom-left': top='93%'; left='7%'; translateX='0%'; translateY='-100%'; textAlign='left'; break;
+        case 'bottom-center': top='93%'; left='50%'; translateX='-50%'; translateY='-100%'; break;
+        case 'bottom-right': top='93%'; left='93%'; translateX='-100%'; translateY='-100%'; textAlign='right'; break;
+      }
+      overlayText.style.top = top;
+      overlayText.style.left = left;
+      overlayText.style.transform = `translate(${translateX}, ${translateY})`;
+      overlayText.style.textAlign = textAlign;
+    }
+
+    // On load, pick the image by ID
+    window.addEventListener('load', () => {
+      const id = getQueryParam('id');
+      if(id && images[id]){
+        productImage.src = images[id];
+      } else {
+        productImage.src = 'https://via.placeholder.com/600x400?text=Board+Preview';
+      }
+      updatePreview();
+    });
+  </script>
+</body>
+</html>

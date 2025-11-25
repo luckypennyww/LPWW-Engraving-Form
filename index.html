@@ -1,104 +1,283 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Font Preview Tool</title>
+  <meta charset="utf-8" />
+  <title>Engraving Preview — LPWW</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    /* Main font for the page and input */
-    @font-face {
-      font-family: "MainFont";
-      src: url("BebasNeue-Regular.ttf") format("truetype");
+    /* -------------------------
+       Replace these file names
+       with the exact ones you uploaded
+       ------------------------- */
+    @font-face { font-family: "PreviewFont1"; src: url("longtail.ttf") format("truetype"); }
+    @font-face { font-family: "PreviewFont2"; src: url("brittany-signature-script.regular.ttf") format("truetype"); }
+    @font-face { font-family: "PreviewFont3"; src: url("kugile.regular.ttf") format("truetype"); }
+    @font-face { font-family: "PreviewFont4"; src: url("mochademo.mocha-demo.ttf") format("truetype"); }
+    @font-face { font-family: "PreviewFont5"; src: url("Berista.ttf") format("truetype"); }
+    @font-face { font-family: "MainFont"; src: url("BebasNeue-Regular.ttf") format("truetype"); }
+
+    :root{
+      --page-max-width: 900px;
+      --ui-gap: 12px;
+      --preview-bg: #fafafa;
     }
 
-    /* Preview fonts */
-    @font-face {
-      font-family: "PreviewFont1";
-      src: url("longtail.ttf") format("truetype");
-    }
-    @font-face {
-      font-family: "PreviewFont2";
-      src: url("brittany-signature-script.regular.ttf") format("truetype");
-    }
-    @font-face {
-      font-family: "PreviewFont3";
-      src: url("kugile.regular.ttf") format("truetype");
-    }
-    @font-face {
-      font-family: "PreviewFont4";
-      src: url("mochademo.mocha-demo.ttf") format("truetype");
-    }
-    @font-face {
-      font-family: "PreviewFont5";
-      src: url("Berista.ttf") format("truetype");
+    body{
+      font-family: "MainFont", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      margin: 18px;
+      display: flex;
+      justify-content: center;
     }
 
-    body {
-      font-family: "MainFont", sans-serif;
-      padding: 30px;
-      max-width: 700px;
-      margin: auto;
-    }
-
-    input {
+    .container{
       width: 100%;
-      font-size: 22px;
+      max-width: var(--page-max-width);
+    }
+
+    h1 { font-size: 20px; margin: 6px 0 18px 0; }
+    label { display:block; margin-bottom:6px; font-weight:600; }
+    .row { display:flex; gap:var(--ui-gap); align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+    .col { flex: 1 1 220px; min-width: 220px; }
+
+    .controls {
       padding: 12px;
-      margin-bottom: 30px;
-      font-family: "MainFont", sans-serif;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      margin-bottom: 18px;
     }
 
-    .preview-block {
-      margin-bottom: 25px;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      background: #fafafa;
+    input[type="text"], select, textarea {
+      width:100%;
+      padding:10px;
+      font-size:16px;
+      border:1px solid #ddd;
+      border-radius:6px;
+      box-sizing:border-box;
+      font-family: inherit;
     }
 
-    .preview {
-      font-size: 40px;
+    .preview-area {
+      position: relative;
+      background: var(--preview-bg);
+      border: 1px solid #e5e5e5;
+      border-radius: 10px;
+      overflow: hidden;
+      max-width:100%;
+    }
+
+    .image-wrapper {
+      width:100%;
+      display:block;
+      position: relative;
+      /* maintain aspect, image will scale to width */
+      background: #fff;
+    }
+
+    .image-wrapper img {
+      display:block;
+      width:100%;
+      height:auto;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    /* Overlay text element */
+    .overlay {
+      position: absolute;
+      white-space: pre-wrap;
       word-break: break-word;
+      color: #000;
+      /* initial transforms and centering handled in JS */
+      transform: translate(-50%, -50%);
+      pointer-events: none; /* not draggable in this mode */
+      text-align: center;
+    }
+
+    /* small UI bits */
+    .muted { color:#666; font-size:13px; }
+    .btn {
+      display:inline-block;
+      padding:10px 14px;
+      background:#0b76ef;
+      color:#fff;
+      border-radius:6px;
+      text-decoration:none;
+      cursor:pointer;
+      border:none;
+    }
+    .btn.secondary { background:#666; }
+    .small { padding:6px 8px; font-size:14px; }
+
+    .form-footer { display:flex; gap:12px; align-items:center; margin-top:12px; flex-wrap:wrap; }
+    .note { font-size:13px; color:#444; }
+
+    /* responsive */
+    @media (max-width:720px){
+      .row { flex-direction: column; }
     }
   </style>
 </head>
 <body>
-  <h2>Type your text to preview:</h2>
-  <input id="nameInput" placeholder="Type here…" oninput="updatePreviews()">
+  <div class="container">
+    <h1>Engraving preview</h1>
 
-  <div class="preview-block">
-    <strong>Font 1:</strong>
-    <div id="prev1" class="preview" style="font-family: 'PreviewFont1';"></div>
-  </div>
+    <div class="controls">
+      <div class="row">
+        <div class="col">
+          <label for="textInput">Text to engrave</label>
+          <input id="textInput" type="text" placeholder="Type the text exactly as you want it" oninput="updatePreview()" />
+        </div>
 
-  <div class="preview-block">
-    <strong>Font 2:</strong>
-    <div id="prev2" class="preview" style="font-family: 'PreviewFont2';"></div>
-  </div>
+        <div style="width:160px;">
+          <label for="fontSelect">Choose font</label>
+          <select id="fontSelect" onchange="updatePreview()">
+            <option value="PreviewFont1">PreviewFont1 (longtail)</option>
+            <option value="PreviewFont2">PreviewFont2 (brittany)</option>
+            <option value="PreviewFont3">PreviewFont3 (kugile)</option>
+            <option value="PreviewFont4">PreviewFont4 (mochademo)</option>
+            <option value="PreviewFont5">PreviewFont5 (Berista)</option>
+          </select>
+        </div>
 
-  <div class="preview-block">
-    <strong>Font 3:</strong>
-    <div id="prev3" class="preview" style="font-family: 'PreviewFont3';"></div>
-  </div>
+        <div style="width:160px;">
+          <label for="sizeRange">Font size</label>
+          <input id="sizeRange" type="range" min="18" max="120" value="48" oninput="updatePreview()" />
+        </div>
 
-  <div class="preview-block">
-    <strong>Font 4:</strong>
-    <div id="prev4" class="preview" style="font-family: 'PreviewFont4';"></div>
-  </div>
+        <div style="width:140px;">
+          <label for="colorInput">Color</label>
+          <input id="colorInput" type="color" value="#000000" onchange="updatePreview()" />
+        </div>
+      </div>
 
-  <div class="preview-block">
-    <strong>Font 5:</strong>
-    <div id="prev5" class="preview" style="font-family: 'PreviewFont5';"></div>
+      <div class="row">
+        <div class="col">
+          <label for="placementSelect">Placement (snap positions)</label>
+          <select id="placementSelect" onchange="applyPlacement()">
+            <option value="top-left">Top Left</option>
+            <option value="top-center">Top Center</option>
+            <option value="top-right">Top Right</option>
+
+            <option value="center-left">Center Left</option>
+            <option value="center">Center</option>
+            <option value="center-right">Center Right</option>
+
+            <option value="bottom-left">Bottom Left</option>
+            <option value="bottom-center">Bottom Center</option>
+            <option value="bottom-right">Bottom Right</option>
+          </select>
+        </div>
+
+        <div class="col" style="min-width:320px;">
+          <label>Preview image URL (auto-loaded if you include ?img= on the page link)</label>
+          <input id="imageURL" type="text" placeholder="Paste image URL here (or use link with ?img=...)" oninput="loadImageFromInput()" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label for="notes">Any special instructions (optional)</label>
+          <textarea id="notes" rows="2" placeholder="e.g. All caps, small engraving, center alignment"></textarea>
+        </div>
+
+        <div style="min-width:220px;">
+          <label>&nbsp;</label>
+          <div style="display:flex; gap:8px;">
+            <button class="btn" onclick="submitForm()">Submit engraving</button>
+            <button class="btn secondary" onclick="copySubmission()">Copy submission</button>
+            <button class="btn small" onclick="resetPreview()">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview area -->
+    <div class="preview-area" style="margin-top:18px;">
+      <div class="image-wrapper" id="imageWrapper" style="width:100%;">
+        <img id="productImage" src="" alt="Product image preview" />
+        <div id="overlayText" class="overlay">Your text</div>
+      </div>
+    </div>
+
+    <p class="muted" style="margin-top:10px;">
+      Usage: Send customers a link like:
+      <br>
+      <code style="font-size:13px; background:#fff; padding:4px; border-radius:4px;">
+        https://<em>your-username</em>.github.io/<em>your-repo</em>/?img=<em>ENCODED_IMAGE_URL</em>
+      </code>
+      <br>
+      Encode the image URL with <code>encodeURIComponent()</code> when building the link.
+    </p>
   </div>
 
   <script>
-    function updatePreviews() {
-      const text = document.getElementById('nameInput').value;
-      document.getElementById('prev1').textContent = text;
-      document.getElementById('prev2').textContent = text;
-      document.getElementById('prev3').textContent = text;
-      document.getElementById('prev4').textContent = text;
-      document.getElementById('prev5').textContent = text;
+    // -------------------------------
+    // Utility to read ?img= parameter
+    // -------------------------------
+    function getQueryParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
     }
-  </script>
-</body>
-</html>
+
+    // initialize elements
+    const productImage = document.getElementById('productImage');
+    const overlayText = document.getElementById('overlayText');
+    const txtInput = document.getElementById('textInput');
+    const fontSelect = document.getElementById('fontSelect');
+    const sizeRange = document.getElementById('sizeRange');
+    const colorInput = document.getElementById('colorInput');
+    const placementSelect = document.getElementById('placementSelect');
+    const imageURLInput = document.getElementById('imageURL');
+    const notesInput = document.getElementById('notes');
+
+    // default
+    overlayText.style.fontFamily = fontSelect.value;
+    overlayText.style.fontSize = sizeRange.value + 'px';
+    overlayText.style.color = colorInput.value;
+
+    // on load, try to read ?img=
+    window.addEventListener('load', () => {
+      const imgParam = getQueryParam('img');
+      if (imgParam) {
+        // decode if needed (some links will be already encoded)
+        const decoded = decodeURIComponent(imgParam);
+        productImage.src = decoded;
+        imageURLInput.value = decoded;
+      } else {
+        // fallback placeholder image (replace with a neutral image if you want)
+        productImage.src = '';
+      }
+      applyPlacement(); // position overlay
+      updatePreview();
+    });
+
+    // if user pastes image into field
+    function loadImageFromInput(){
+      const v = imageURLInput.value.trim();
+      productImage.src = v || '';
+    }
+
+    // update preview text/font/size/color
+    function updatePreview(){
+      const t = txtInput.value || ' ';
+      overlayText.textContent = t;
+      overlayText.style.fontFamily = fontSelect.value;
+      overlayText.style.fontSize = sizeRange.value + 'px';
+      overlayText.style.color = colorInput.value;
+      applyPlacement();
+    }
+
+    // apply one of 9 placements by setting top/left + transform anchors & text-align
+    function applyPlacement(){
+      const pos = placementSelect.value;
+      // default center
+      let top = '50%'; let left = '50%';
+      let translateX = '-50%'; let translateY = '-50%';
+      let textAlign = 'center';
+
+      switch(pos){
+        case 'top-left':
+          top = '7%'; left = '7%'; translateX = '0%'; translateY = '0%'; textAlign='left'; break;
+        case 'top-center':
+          top =

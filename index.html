@@ -63,16 +63,27 @@
       display: block;
     }
 
+    /********************************************
+     * TEXT OVERLAY POSITIONING — CHANGE THESE! *
+     ********************************************
+     * Change "bottom" to move text up/down
+     * Change "right"  to move text left/right
+     *
+     * Currently:
+     * bottom: 15%  → moved UP 30px (approx)
+     * right:  15%  → moved LEFT 10px (approx)
+     ********************************************/
+
     .overlay {
       position: absolute;
-      bottom: 15%;        /* Bottom placement */
-      right:  15%;         /* Right placement */
-      text-align: right; /* FIX: text stays horizontal */
+      bottom: calc(15% + 30px);   /* moved UP 30px */
+      right:  calc(15% + 10px);   /* moved LEFT 10px */
+      text-align: right;
       color: black;
       white-space: pre-wrap;
       word-break: break-word;
       pointer-events: none;
-      font-size: 30px;
+      font-size: 50px;
     }
   </style>
 </head>
@@ -95,12 +106,12 @@
       <option value="PreviewFont5">PreviewFont5</option>
     </select>
 
-    <!-- SIZE SELECT (S/M/L) -->
+    <!-- SIZE SELECT -->
     <label for="sizeSelect">3. Select font size</label>
     <select id="sizeSelect" onchange="updatePreview()">
-      <option value="40">Small</option>
-      <option value="50" selected>Medium</option>
-      <option value="60">Large</option>
+      <option value="40">Small (40pt)</option>
+      <option value="50" selected>Medium (50pt)</option>
+      <option value="60">Large (60pt)</option>
     </select>
 
     <!-- PREVIEW -->
@@ -135,7 +146,7 @@
       overlayText.textContent = txtInput.value || " ";
       overlayText.style.fontFamily = fontSelect.value;
       overlayText.style.fontSize = sizeSelect.value + "px";
-      overlayText.style.textAlign = "right";  // ensure right justified always
+      overlayText.style.textAlign = "right";
     }
 
     window.addEventListener("load", () => {

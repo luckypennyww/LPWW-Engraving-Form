@@ -46,36 +46,7 @@
       box-sizing: border-box;
       margin-bottom: 20px;
       font-family: inherit;
-    }
-
-    /******** SLIDER CUSTOM ********/
-    input[type="range"] {
-      -webkit-appearance: none;
-      width: 100%;
-      margin-bottom: 20px;
-      height: 8px;
-      background: #da9a00;
-      border-radius: 5px;
-    }
-
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 22px;
-      height: 22px;
-      background: white;
-      border-radius: 50%;
-      cursor: pointer;
-      border: 2px solid #da9a00;
-    }
-
-    input[type="range"]::-moz-range-thumb {
-      width: 22px;
-      height: 22px;
-      background: white;
-      border-radius: 50%;
-      cursor: pointer;
-      border: 2px solid #da9a00;
+      color: #222222;
     }
 
     /* Preview */
@@ -94,13 +65,14 @@
 
     .overlay {
       position: absolute;
+      bottom: 7%;        /* Bottom placement */
+      right: 7%;         /* Right placement */
+      text-align: right; /* FIX: text stays horizontal */
       color: black;
       white-space: pre-wrap;
       word-break: break-word;
-      transform: translate(-50%, -50%);
       pointer-events: none;
-      font-size: 40px;
-      text-align: center;
+      font-size: 30px;
     }
   </style>
 </head>
@@ -123,17 +95,12 @@
       <option value="PreviewFont5">PreviewFont5</option>
     </select>
 
-    <!-- SIZE SLIDER -->
-    <label for="sizeRange">3. Select font size</label>
-    <input id="sizeRange" type="range" min="20" max="120" step="10" value="50" oninput="updatePreview()" />
-
-    <!-- PLACEMENT -->
-    <label for="placementSelect">4. Choose text placement</label>
-    <select id="placementSelect" onchange="applyPlacement()">
-      <option value="top-left">Top Left</option>
-      <option value="top-right">Top Right</option>
-      <option value="bottom-left">Bottom Left</option>
-      <option value="bottom-right">Bottom Right</option>
+    <!-- SIZE SELECT (S/M/L) -->
+    <label for="sizeSelect">3. Select font size</label>
+    <select id="sizeSelect" onchange="updatePreview()">
+      <option value="20">Small</option>
+      <option value="30" selected>Medium</option>
+      <option value="40">Large</option>
     </select>
 
     <!-- PREVIEW -->
@@ -150,8 +117,7 @@
     const overlayText = document.getElementById("overlayText");
     const txtInput = document.getElementById("textInput");
     const fontSelect = document.getElementById("fontSelect");
-    const sizeRange = document.getElementById("sizeRange");
-    const placementSelect = document.getElementById("placementSelect");
+    const sizeSelect = document.getElementById("sizeSelect");
 
     // IMAGE MAP
     const images = {
@@ -168,27 +134,8 @@
     function updatePreview() {
       overlayText.textContent = txtInput.value || " ";
       overlayText.style.fontFamily = fontSelect.value;
-      overlayText.style.fontSize = sizeRange.value + "px";
-      overlayText.style.color = "black";  
-      applyPlacement();
-    }
-
-    function applyPlacement() {
-      const pos = placementSelect.value;
-
-      let top = "50%", left = "50%", tx = "-50%", ty = "-50%", align = "center";
-
-      switch (pos) {
-        case "top-left": top="7%"; left="7%"; tx="0"; ty="0"; align="left"; break;
-        case "top-right": top="7%"; left="93%"; tx="-100%"; ty="0"; align="right"; break;
-        case "bottom-left": top="93%"; left="7%"; tx="0"; ty="-100%"; align="left"; break;
-        case "bottom-right": top="93%"; left="93%"; tx="-100%"; ty="-100%"; align="right"; break;
-      }
-
-      overlayText.style.top = top;
-      overlayText.style.left = left;
-      overlayText.style.transform = `translate(${tx}, ${ty})`;
-      overlayText.style.textAlign = align;
+      overlayText.style.fontSize = sizeSelect.value + "px";
+      overlayText.style.textAlign = "right";  // ensure right justified always
     }
 
     window.addEventListener("load", () => {

@@ -57,10 +57,7 @@
       box-sizing: border-box;
     }
 
-    textarea {
-      resize: vertical;
-      min-height: 90px;
-    }
+    textarea { resize: vertical; min-height: 90px; }
 
     /* PREVIEW AREA */
     .preview-area {
@@ -71,14 +68,8 @@
       background: #222222;
     }
 
-    .image-wrapper img {
-      width: 100%;
-      display: block;
-    }
+    .image-wrapper img { width: 100%; display: block; }
 
-    /********************************************
-     * TEXT OVERLAY POSITIONING — CHANGE THESE! *
-     ********************************************/
     .overlay {
       position: absolute;
       color: black;
@@ -103,13 +94,11 @@
       font-family: "MainFont";
     }
 
-    #submitBtn:hover {
-      filter: brightness(1.15);
-    }
+    #submitBtn:hover { filter: brightness(1.15); }
 
     /* NOTES LABEL SPACING */
     #notesLabel {
-      margin-top: 25px;   /* space from image */
+      margin-top: 30px;   /* space from image */
       margin-bottom: 10px; /* space between label and textarea */
       display: block;
     }
@@ -121,11 +110,9 @@
 
   <h1>Engraving Preview Form</h1>
 
-  <!-- TEXT INPUT -->
   <label for="textInput">1. Enter the text you want engraved</label>
   <input id="textInput" type="text" placeholder="Type engraving text here…" oninput="updatePreview()" />
 
-  <!-- FONT SELECT -->
   <label for="fontSelect">2. Choose a font</label>
   <select id="fontSelect" onchange="updateFontSettings()">
     <option value="ScriptFont1">Script Font 1</option>
@@ -135,7 +122,6 @@
     <option value="SansSerif2">Sans Serif Font 2</option>
   </select>
 
-  <!-- SIZE SELECT -->
   <label for="sizeSelect">3. Select font size</label>
   <select id="sizeSelect" onchange="updatePreview()">
     <option value="small">Small (40pt)</option>
@@ -143,7 +129,6 @@
     <option value="large">Large (60pt)</option>
   </select>
 
-  <!-- PREVIEW -->
   <div class="preview-area" id="previewArea">
     <div class="image-wrapper">
       <img id="productImage" src="" alt="Board preview">
@@ -151,19 +136,14 @@
     </div>
   </div>
 
-  <!-- NOTES -->
   <label id="notesLabel" for="notesBox">Additional notes for Lucky Penny (optional)</label>
   <textarea id="notesBox" placeholder="Write any custom instructions here..."></textarea>
 
-  <!-- SUBMIT -->
   <button id="submitBtn" onclick="sendEmail()">Submit</button>
 
 </div>
 
 <script>
-/* ---------------------------------------------
-   CONFIG BLOCK — FONT SIZES & POSITIONS
----------------------------------------------- */
 const FONT_SETTINGS = {
   ScriptFont1: { small: 60, medium: 70, large: 80, bottom: "18%", right: "12%" },
   ScriptFont2: { small: 50, medium: 60, large: 70, bottom: "16%", right: "12%" },
@@ -172,15 +152,11 @@ const FONT_SETTINGS = {
   SansSerif2:  { small: 45, medium: 55, large: 65, bottom: "16%", right: "12%" }
 };
 
-/* ---------------------------------------------
-   MAIN ELEMENTS
----------------------------------------------- */
 const overlayText = document.getElementById("overlayText");
 const textInput = document.getElementById("textInput");
 const fontSelect = document.getElementById("fontSelect");
 const sizeSelect = document.getElementById("sizeSelect");
 
-/* IMAGE MAP */
 const images = {
   "0001": "Engaving crop test 1.png",
   "0002": "Engaving crop test 2.png",
@@ -188,12 +164,10 @@ const images = {
   "0004": "Engaving crop test 4.png"
 };
 
-/* GET BOARD ID */
 function getQueryParam(name) {
   return new URLSearchParams(window.location.search).get(name);
 }
 
-/* APPLY FONT SETTINGS */
 function updateFontSettings() {
   const font = fontSelect.value;
   const sizeName = sizeSelect.value;
@@ -207,7 +181,6 @@ function updateFontSettings() {
   updatePreview();
 }
 
-/* UPDATE TEXT PREVIEW */
 function updatePreview() {
   const font = fontSelect.value;
   const sizeName = sizeSelect.value;
@@ -220,7 +193,6 @@ function updatePreview() {
   overlayText.style.right = config.right;
 }
 
-/* LOAD BOARD IMAGE */
 window.addEventListener("load", () => {
   const id = getQueryParam("id");
   document.getElementById("productImage").src =
@@ -229,16 +201,18 @@ window.addEventListener("load", () => {
   updateFontSettings();
 });
 
-/* ---------------------------------------------
-   EMAILJS — SEND EMAIL WITH JPEG
----------------------------------------------- */
-emailjs.init("VQEb26gwHkvgcRIDg");
+// ----- EMAILJS CONFIG -----
+const EMAILJS_SERVICE_ID = "service_lk91mlq";
+const EMAILJS_TEMPLATE_ID = "template_n1bl34p";
+const EMAILJS_PUBLIC_KEY = "VQEb26gwHkvgcRIDg";
+
+emailjs.init(EMAILJS_PUBLIC_KEY);
 
 function sendEmail() {
   const previewArea = document.getElementById("previewArea");
 
   html2canvas(previewArea, { scale: 0.5 }).then(canvas => {
-    const imgData = canvas.toDataURL("image/jpeg", 0.7); // JPEG format, smaller size
+    const imgData = canvas.toDataURL("image/jpeg", 0.7); // compressed JPEG
 
     const templateParams = {
       engraving_text: textInput.value,
@@ -249,12 +223,11 @@ function sendEmail() {
       screenshot: imgData
     };
 
-    emailjs.send("service_wqt6arm", "template_n1bl34p", templateParams)
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
       .then(() => alert("Your engraving request has been sent!"))
       .catch(err => alert("Error sending email: " + JSON.stringify(err)));
   });
 }
 </script>
-
 </body>
 </html>

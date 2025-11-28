@@ -60,6 +60,7 @@
     textarea {
       resize: vertical;
       min-height: 90px;
+      margin-top: 30px; /* EXTRA SPACE ABOVE NOTES */
     }
 
     /* PREVIEW AREA */
@@ -96,6 +97,7 @@
       cursor: pointer;
       width: 100%;
       margin-top: 20px;
+      font-family: "MainFont"; /* Bebas Neue */
       font-weight: bold;
     }
 
@@ -151,9 +153,8 @@
 
 <script>
 /* ---------------------------------------------
-   CONFIG BLOCK — CHANGE THESE VALUES ANYTIME
+   CONFIG BLOCK — CUSTOMIZE FONT SIZE & POSITION
 ---------------------------------------------- */
-
 const FONT_SETTINGS = {
   ScriptFont1: { small: 60, medium: 70, large: 80, bottom: "18%", right: "12%" },
   ScriptFont2: { small: 50, medium: 60, large: 70, bottom: "16%", right: "12%" },
@@ -187,7 +188,6 @@ function getQueryParam(name) {
 function updateFontSettings() {
   const font = fontSelect.value;
   const sizeName = sizeSelect.value;
-
   const config = FONT_SETTINGS[font];
 
   overlayText.style.fontFamily = font;
@@ -223,7 +223,6 @@ window.addEventListener("load", () => {
 /* ---------------------------------------------
    EMAILJS — SEND EMAIL WITH SCREENSHOT
 ---------------------------------------------- */
-
 emailjs.init("VQEb26gwHkvgcRIDg");
 
 function sendEmail() {
@@ -241,12 +240,11 @@ function sendEmail() {
       screenshot: imgData
     };
 
-    emailjs.send("service_wqt6arm", "template_x0c5a2t", templateParams)
+    emailjs.send("service_lk91mlq", "template_x0c5a2t", templateParams)
       .then(() => alert("Your engraving request has been sent!"))
       .catch(err => alert("Error sending email: " + JSON.stringify(err)));
   });
 }
 </script>
-
 </body>
 </html>

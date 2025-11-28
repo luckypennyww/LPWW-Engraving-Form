@@ -4,13 +4,20 @@
   <meta charset="utf-8" />
   <title>Engraving Preview — LPWW</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
+  <!-- html2canvas (for screenshot) -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
   <style>
-    /* Fonts */
-    @font-face { font-family: "PreviewFont1"; src: url("longtail.ttf") format("truetype"); }
-    @font-face { font-family: "PreviewFont2"; src: url("brittany-signature-script.regular.ttf") format("truetype"); }
-    @font-face { font-family: "PreviewFont3"; src: url("kugile.regular.ttf") format("truetype"); }
-    @font-face { font-family: "PreviewFont4"; src: url("mochademo.mocha-demo.ttf") format("truetype"); }
-    @font-face { font-family: "PreviewFont5"; src: url("Berista.ttf") format("truetype"); }
+    /* FONTS */
+    @font-face { font-family: "ScriptFont1"; src: url("longtail.ttf") format("truetype"); }
+    @font-face { font-family: "ScriptFont2"; src: url("brittany-signature-script.regular.ttf") format("truetype"); }
+    @font-face { font-family: "SerifFont"; src: url("kugile.regular.ttf") format("truetype"); }
+    @font-face { font-family: "SansSerif1"; src: url("mochademo.mocha-demo.ttf") format("truetype"); }
+    @font-face { font-family: "SansSerif2"; src: url("Berista.ttf") format("truetype"); }
     @font-face { font-family: "MainFont"; src: url("BebasNeue-Regular.ttf") format("truetype"); }
 
     body {
@@ -19,6 +26,7 @@
       display: flex;
       justify-content: center;
       background: #222222;
+      color: #222222;
     }
 
     .container { width: 100%; max-width: 900px; }
@@ -37,19 +45,24 @@
       color: #da9a00;
     }
 
-    input[type="text"], select {
+    input[type="text"], select, textarea {
       width: 100%;
       padding: 12px;
       font-size: 18px;
-      border: 0px solid #da9a00;
       border-radius: 6px;
-      box-sizing: border-box;
+      border: none;
       margin-bottom: 20px;
       font-family: inherit;
       color: #222222;
+      box-sizing: border-box;
     }
 
-    /* Preview */
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    /* PREVIEW AREA */
     .preview-area {
       margin-top: 25px;
       position: relative;
@@ -63,97 +76,177 @@
       display: block;
     }
 
-    /********************************************
-     * TEXT OVERLAY POSITIONING — CHANGE THESE! *
-     ********************************************
-     * Change "bottom" to move text up/down
-     * Change "right"  to move text left/right
-     *
-     * Currently:
-     * bottom: 15%  → moved UP 30px (approx)
-     * right:  15%  → moved LEFT 10px (approx)
-     ********************************************/
-
     .overlay {
       position: absolute;
-      bottom: calc(10% + 10px);   /* moved UP 30px */
-      right:  calc(10% + 5px);   /* moved LEFT 10px */
-      text-align: right;
       color: black;
       white-space: pre-wrap;
       word-break: break-word;
+      text-align: right;
       pointer-events: none;
-      font-size: 50px;
+    }
+
+    /* SUBMIT BUTTON */
+    #submitBtn {
+      background: #da9a00;
+      color: #222222;
+      border: none;
+      padding: 14px 26px;
+      font-size: 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    #submitBtn:hover {
+      filter: brightness(1.15);
     }
   </style>
 </head>
 
 <body>
-  <div class="container">
-    <h1>Engraving Preview Form</h1>
+<div class="container">
 
-    <!-- TEXT INPUT -->
-    <label for="textInput">1. Enter the text you want engraved</label>
-    <input id="textInput" type="text" placeholder="Type engraving text here…" oninput="updatePreview()" />
+  <h1>Engraving Preview Form</h1>
 
-    <!-- FONT SELECT -->
-    <label for="fontSelect">2. Choose a font</label>
-    <select id="fontSelect" onchange="updatePreview()">
-      <option value="PreviewFont1">PreviewFont1</option>
-      <option value="PreviewFont2">PreviewFont2</option>
-      <option value="PreviewFont3">PreviewFont3</option>
-      <option value="PreviewFont4">PreviewFont4</option>
-      <option value="PreviewFont5">PreviewFont5</option>
-    </select>
+  <!-- TEXT INPUT -->
+  <label for="textInput">1. Enter the text you want engraved</label>
+  <input id="textInput" type="text" placeholder="Type engraving text here…" oninput="updatePreview()" />
 
-    <!-- SIZE SELECT -->
-    <label for="sizeSelect">3. Select font size</label>
-    <select id="sizeSelect" onchange="updatePreview()">
-      <option value="40">Small (40pt)</option>
-      <option value="50" selected>Medium (50pt)</option>
-      <option value="60">Large (60pt)</option>
-    </select>
+  <!-- FONT SELECT -->
+  <label for="fontSelect">2. Choose a font</label>
+  <select id="fontSelect" onchange="updateFontSettings()">
+    <option value="ScriptFont1">Script Font 1</option>
+    <option value="ScriptFont2">Script Font 2</option>
+    <option value="SerifFont">Serif Font</option>
+    <option value="SansSerif1">Sans Serif Font 1</option>
+    <option value="SansSerif2">Sans Serif Font 2</option>
+  </select>
 
-    <!-- PREVIEW -->
-    <div class="preview-area">
-      <div class="image-wrapper">
-        <img id="productImage" src="" alt="Board preview">
-        <div id="overlayText" class="overlay">Your text</div>
-      </div>
+  <!-- SIZE SELECT -->
+  <label for="sizeSelect">3. Select font size</label>
+  <select id="sizeSelect" onchange="updatePreview()">
+    <option value="small">Small (40pt)</option>
+    <option value="medium" selected>Medium (50pt)</option>
+    <option value="large">Large (60pt)</option>
+  </select>
+
+  <!-- PREVIEW -->
+  <div class="preview-area" id="previewArea">
+    <div class="image-wrapper">
+      <img id="productImage" src="" alt="Board preview">
+      <div id="overlayText" class="overlay">Your text</div>
     </div>
   </div>
 
-  <script>
-    const productImage = document.getElementById("productImage");
-    const overlayText = document.getElementById("overlayText");
-    const txtInput = document.getElementById("textInput");
-    const fontSelect = document.getElementById("fontSelect");
-    const sizeSelect = document.getElementById("sizeSelect");
+  <!-- NOTES -->
+  <label for="notesBox">Additional notes for Lucky Penny (optional)</label>
+  <textarea id="notesBox" placeholder="Write any custom instructions here..."></textarea>
 
-    // IMAGE MAP
-    const images = {
-      "0001": "Engaving crop test 1.png",
-      "0002": "Engaving crop test 2.png",
-      "0003": "Engaving crop test 3.png",
-      "0004": "Engaving crop test 4.png"
+  <!-- SUBMIT -->
+  <button id="submitBtn" onclick="sendEmail()">Submit</button>
+
+</div>
+
+<script>
+/* ---------------------------------------------
+   CONFIG BLOCK — CHANGE THESE VALUES ANYTIME
+---------------------------------------------- */
+
+const FONT_SETTINGS = {
+  ScriptFont1: { small: 40, medium: 50, large: 60, bottom: "12%", right: "12%" },
+  ScriptFont2: { small: 40, medium: 50, large: 60, bottom: "12%", right: "12%" },
+  SerifFont:   { small: 40, medium: 50, large: 60, bottom: "12%", right: "12%" },
+  SansSerif1:  { small: 40, medium: 50, large: 60, bottom: "12%", right: "12%" },
+  SansSerif2:  { small: 40, medium: 50, large: 60, bottom: "12%", right: "12%" }
+};
+
+/* ---------------------------------------------
+   MAIN ELEMENTS
+---------------------------------------------- */
+const overlayText = document.getElementById("overlayText");
+const textInput = document.getElementById("textInput");
+const fontSelect = document.getElementById("fontSelect");
+const sizeSelect = document.getElementById("sizeSelect");
+
+/* IMAGE MAP */
+const images = {
+  "0001": "Engaving crop test 1.png",
+  "0002": "Engaving crop test 2.png",
+  "0003": "Engaving crop test 3.png",
+  "0004": "Engaving crop test 4.png"
+};
+
+/* GET BOARD ID */
+function getQueryParam(name) {
+  return new URLSearchParams(window.location.search).get(name);
+}
+
+/* APPLY FONT SETTINGS */
+function updateFontSettings() {
+  const font = fontSelect.value;
+  const sizeName = sizeSelect.value;
+
+  const config = FONT_SETTINGS[font];
+
+  overlayText.style.fontFamily = font;
+  overlayText.style.fontSize = config[sizeName] + "px";
+  overlayText.style.bottom = config.bottom;
+  overlayText.style.right = config.right;
+
+  updatePreview();
+}
+
+/* UPDATE TEXT PREVIEW */
+function updatePreview() {
+  const font = fontSelect.value;
+  const sizeName = sizeSelect.value;
+  const config = FONT_SETTINGS[font];
+
+  overlayText.textContent = textInput.value || " ";
+  overlayText.style.fontFamily = font;
+  overlayText.style.fontSize = config[sizeName] + "px";
+  overlayText.style.bottom = config.bottom;
+  overlayText.style.right = config.right;
+}
+
+/* LOAD BOARD IMAGE */
+window.addEventListener("load", () => {
+  const id = getQueryParam("id");
+  document.getElementById("productImage").src =
+    id && images[id] ? images[id] : "https://via.placeholder.com/600x400?text=Board+Preview";
+
+  updateFontSettings();
+});
+
+/* ---------------------------------------------
+   EMAILJS — SEND EMAIL WITH SCREENSHOT
+---------------------------------------------- */
+
+emailjs.init("VQEb26gwHkvgcRIDg");
+
+function sendEmail() {
+  const previewArea = document.getElementById("previewArea");
+
+  html2canvas(previewArea).then(canvas => {
+    const imgData = canvas.toDataURL("image/png");
+
+    const templateParams = {
+      engraving_text: textInput.value,
+      font: fontSelect.value,
+      size_label: sizeSelect.value,
+      notes: document.getElementById("notesBox").value,
+      board_id: getQueryParam("id") || "none",
+      screenshot: imgData
     };
 
-    function getQueryParam(name) {
-      return new URLSearchParams(window.location.search).get(name);
-    }
+    emailjs.send("service_wqt6arm", "template_x0c5a2t", templateParams)
+      .then(() => alert("Your engraving request has been sent!"))
+      .catch(err => alert("Error sending email: " + JSON.stringify(err)));
+  });
+}
+</script>
 
-    function updatePreview() {
-      overlayText.textContent = txtInput.value || " ";
-      overlayText.style.fontFamily = fontSelect.value;
-      overlayText.style.fontSize = sizeSelect.value + "px";
-      overlayText.style.textAlign = "right";
-    }
-
-    window.addEventListener("load", () => {
-      const id = getQueryParam("id");
-      productImage.src = (id && images[id]) ? images[id] : "https://via.placeholder.com/600x400?text=Board+Preview";
-      updatePreview();
-    });
-  </script>
 </body>
 </html>

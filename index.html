@@ -60,7 +60,6 @@
     textarea {
       resize: vertical;
       min-height: 90px;
-      margin-top: 30px; /* EXTRA SPACE ABOVE NOTES */
     }
 
     /* PREVIEW AREA */
@@ -77,6 +76,9 @@
       display: block;
     }
 
+    /********************************************
+     * TEXT OVERLAY POSITIONING — CHANGE THESE! *
+     ********************************************/
     .overlay {
       position: absolute;
       color: black;
@@ -97,12 +99,19 @@
       cursor: pointer;
       width: 100%;
       margin-top: 20px;
-      font-family: "MainFont"; /* Bebas Neue */
       font-weight: bold;
+      font-family: "MainFont";
     }
 
     #submitBtn:hover {
       filter: brightness(1.15);
+    }
+
+    /* NOTES LABEL SPACING */
+    #notesLabel {
+      margin-top: 25px;   /* space from image */
+      margin-bottom: 10px; /* space between label and textarea */
+      display: block;
     }
   </style>
 </head>
@@ -143,7 +152,7 @@
   </div>
 
   <!-- NOTES -->
-  <label for="notesBox">Additional notes for Lucky Penny (optional)</label>
+  <label id="notesLabel" for="notesBox">Additional notes for Lucky Penny (optional)</label>
   <textarea id="notesBox" placeholder="Write any custom instructions here..."></textarea>
 
   <!-- SUBMIT -->
@@ -153,7 +162,7 @@
 
 <script>
 /* ---------------------------------------------
-   CONFIG BLOCK — CUSTOMIZE FONT SIZE & POSITION
+   CONFIG BLOCK — FONT SIZES & POSITIONS
 ---------------------------------------------- */
 const FONT_SETTINGS = {
   ScriptFont1: { small: 60, medium: 70, large: 80, bottom: "18%", right: "12%" },
@@ -221,15 +230,15 @@ window.addEventListener("load", () => {
 });
 
 /* ---------------------------------------------
-   EMAILJS — SEND EMAIL WITH SCREENSHOT
+   EMAILJS — SEND EMAIL WITH JPEG
 ---------------------------------------------- */
 emailjs.init("VQEb26gwHkvgcRIDg");
 
 function sendEmail() {
   const previewArea = document.getElementById("previewArea");
 
-  html2canvas(previewArea).then(canvas => {
-    const imgData = canvas.toDataURL("image/png");
+  html2canvas(previewArea, { scale: 0.5 }).then(canvas => {
+    const imgData = canvas.toDataURL("image/jpeg", 0.7); // JPEG format, smaller size
 
     const templateParams = {
       engraving_text: textInput.value,
@@ -240,11 +249,12 @@ function sendEmail() {
       screenshot: imgData
     };
 
-    emailjs.send("service_lk91mlq", "template_n1bl34p", templateParams)
+    emailjs.send("service_wqt6arm", "template_n1bl34p", templateParams)
       .then(() => alert("Your engraving request has been sent!"))
       .catch(err => alert("Error sending email: " + JSON.stringify(err)));
   });
 }
 </script>
+
 </body>
 </html>

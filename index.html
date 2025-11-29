@@ -27,6 +27,7 @@
     .preview-area { margin-top: 25px; position: relative; border-radius: 10px; overflow: hidden; background: #222; }
     .image-wrapper { position: relative; width: 100%; }
     .image-wrapper img { width: 100%; display: block; }
+    .overlay { position: absolute; color: black; white-space: pre-wrap; word-break: break-word; text-align: right; pointer-events: none; }
     .svg-overlay { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
     #submitBtn { background: #da9a00; color: #222; border: none; padding: 14px 26px; font-size: 20px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 20px; font-weight: bold; font-family: "MainFont"; }
     #submitBtn:hover { filter: brightness(1.15); }
@@ -61,6 +62,9 @@
   <div class="preview-area" id="previewArea">
     <div class="image-wrapper">
       <img id="productImage" src="" alt="Board preview">
+      <!-- rectangle overlay -->
+      <div id="overlayText" class="overlay">Your text</div>
+      <!-- circular text overlay -->
       <svg id="svgOverlay" class="svg-overlay" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
   </div>
@@ -72,15 +76,30 @@
 </div>
 
 <script>
+// RECTANGLE FONT SETTINGS
+const FONT_SETTINGS = {
+  ScriptFont1: { small: 60, medium: 70, large: 80, bottom: "18%", right: "12%" },
+  ScriptFont2: { small: 50, medium: 60, large: 70, bottom: "16%", right: "12%" },
+  SerifFont:   { small: 40, medium: 50, large: 60, bottom: "10%", right: "12%" },
+  SansSerif1:  { small: 50, medium: 60, large: 70, bottom: "16%", right: "12%" },
+  SansSerif2:  { small: 45, medium: 55, large: 65, bottom: "16%", right: "12%" }
+};
+
+// CIRCULAR FONT SETTINGS
 const CIRCLE_FONT_SETTINGS = {
-  ScriptFont1: { small: 60, medium: 70, large: 80, radiusBase: 400 }, 
+  ScriptFont1: { small: 60, medium: 70, large: 80, radiusBase: 400 },
   ScriptFont2: { small: 50, medium: 60, large: 70, radiusBase: 400 },
   SerifFont:   { small: 40, medium: 50, large: 60, radiusBase: 400 },
   SansSerif1:  { small: 50, medium: 60, large: 70, radiusBase: 400 },
   SansSerif2:  { small: 45, medium: 55, large: 65, radiusBase: 400 }
 };
 
+// IMAGE MAP
 const images = {
+  "R0001": "Engaving crop test 1.png",
+  "R0002": "Engaving crop test 2.png",
+  "R0003": "Engaving crop test 3.png",
+  "R0004": "Engaving crop test 4.png",
   "C001": "circle-board-1.png",
   "C002": "circle-board-2.png"
 };
@@ -90,6 +109,7 @@ const EMAILJS_TEMPLATE_ID = "template_n1bl34p";
 const EMAILJS_PUBLIC_KEY = "VQEb26gwHkvgcRIDg";
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
+const overlayText = document.getElementById("overlayText");
 const svgOverlay = document.getElementById("svgOverlay");
 const productImage = document.getElementById("productImage");
 const textInput = document.getElementById("textInput");
@@ -97,13 +117,17 @@ const fontSelect = document.getElementById("fontSelect");
 const sizeSelect = document.getElementById("sizeSelect");
 
 let currentId = null;
+let isCircle = false;
 
 function getQueryParam(name) { return new URLSearchParams(window.location.search).get(name); }
-function normalizeId(id) { if(!id) return null; if(id.startsWith("C")) return id; return "C" + id.padStart(3,"0"); }
+function normalizeId(id){ if(!id) return null; if(id.startsWith("C") || id.startsWith("R")) return id; if(/^\d+$/.test(id)) return "R" + id.padStart(4,"0"); return id; }
 
 window.addEventListener("load", () => {
   currentId = normalizeId(getQueryParam("id"));
-  productImage.src = (currentId && images[currentId]) ? images[currentId] : "https://via.placeholder.com/600x600?text=Circular+Board";
+  isCircle = currentId && currentId.startsWith("C");
+
+  productImage.src = (currentId && images[currentId]) ? images[currentId] : "https://via.placeholder.com/600x400?text=Board+Preview";
+
   productImage.addEventListener("load", () => {
     svgOverlay.setAttribute("width", productImage.clientWidth);
     svgOverlay.setAttribute("height", productImage.clientHeight);
@@ -111,46 +135,73 @@ window.addEventListener("load", () => {
     svgOverlay.style.height = productImage.clientHeight + "px";
     updateFontSettings();
   });
+
   if(productImage.complete) productImage.dispatchEvent(new Event('load'));
 });
 
-function updateFontSettings() { renderCurvedText(); updatePreview(); }
-function updatePreview() { renderCurvedText(); }
+function updateFontSettings() {
+  if(!isCircle){
+    const font = fontSelect.value;
+    const sizeName = sizeSelect.value;
+    const config = FONT_SETTINGS[font];
+    overlayText.style.display = "block";
+    overlayText.style.fontFamily = font;
+    overlayText.style.fontSize = config[sizeName] + "px";
+    overlayText.style.bottom = config.bottom;
+    overlayText.style.right = config.right;
+    svgOverlay.innerHTML = "";
+  } else {
+    overlayText.style.display = "none";
+    renderCurvedText();
+  }
+  updatePreview();
+}
+
+function updatePreview() {
+  if(!isCircle){
+    const font = fontSelect.value;
+    const sizeName = sizeSelect.value;
+    const config = FONT_SETTINGS[font];
+    overlayText.textContent = textInput.value || " ";
+    overlayText.style.fontFamily = font;
+    overlayText.style.fontSize = config[sizeName] + "px";
+    overlayText.style.bottom = config.bottom;
+    overlayText.style.right = config.right;
+  } else {
+    renderCurvedText();
+  }
+}
 
 function renderCurvedText() {
   const font = fontSelect.value;
   const sizeName = sizeSelect.value;
   const text = textInput.value || " ";
-
   svgOverlay.innerHTML = "";
 
   const w = productImage.clientWidth;
   const h = productImage.clientHeight;
   svgOverlay.setAttribute("viewBox", `0 0 ${w} ${h}`);
-
   const cx = w / 2;
   const cy = h / 2;
 
-  const fontCircle = CIRCLE_FONT_SETTINGS[font] || { small: 60, medium: 70, large: 80, radiusBase: 400 };
+  const fontCircle = CIRCLE_FONT_SETTINGS[font] || { small: 50, medium: 60, large: 70, radiusBase: 400 };
   const fontSizePx = fontCircle[sizeName];
   const radius = fontCircle.radiusBase;
 
-  // For bottom-half arc (reads normally on bottom)
-  const midAngle = 135 * Math.PI / 180; // 135 deg points SE bottom-half
+  // bottom half SE
+  const midAngle = 135 * Math.PI / 180;
   const approxCharWidth = fontSizePx * 0.6;
   const approxTextWidth = Math.max(10, text.length * approxCharWidth);
   const arcAngle = Math.min(Math.PI * 1.4, approxTextWidth / radius);
 
   const startAngle = midAngle - arcAngle / 2;
   const endAngle = midAngle + arcAngle / 2;
-
   const startX = cx + radius * Math.cos(startAngle);
   const startY = cy + radius * Math.sin(startAngle);
   const endX   = cx + radius * Math.cos(endAngle);
   const endY   = cy + radius * Math.sin(endAngle);
-
   const largeArcFlag = (arcAngle > Math.PI) ? 1 : 0;
-  const sweepFlag = 0; // reverse for bottom half
+  const sweepFlag = 0;
 
   const pathId = "arcPath";
   const svgNS = "http://www.w3.org/2000/svg";

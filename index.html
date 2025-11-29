@@ -1,177 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>Engraving Preview — LPWW</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-
-  <!-- EmailJS -->
-  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
-  <!-- html2canvas (for screenshot) -->
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-
-  <style>
-    @font-face { font-family: "ScriptFont1"; src: url("longtail.ttf") format("truetype"); }
-    @font-face { font-family: "ScriptFont2"; src: url("brittany-signature-script.regular.ttf") format("truetype"); }
-    @font-face { font-family: "SerifFont"; src: url("kugile.regular.ttf") format("truetype"); }
-    @font-face { font-family: "SansSerif1"; src: url("mochademo.mocha-demo.ttf") format("truetype"); }
-    @font-face { font-family: "SansSerif2"; src: url("Berista.ttf") format("truetype"); }
-    @font-face { font-family: "MainFont"; src: url("BebasNeue-Regular.ttf") format("truetype"); }
-
-    body { font-family: "MainFont", system-ui, sans-serif; margin: 1px; display: flex; justify-content: center; background: #222; color: #222; }
-    .container { width: 100%; max-width: 900px; }
-    h1 { font-size: 50px; margin-bottom: 20px; color: #da9a00; }
-    label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 18pt; color: #da9a00; }
-    input[type="text"], select, textarea { width: 100%; padding: 12px; font-size: 18px; border-radius: 6px; border: none; margin-bottom: 20px; font-family: inherit; color: #222; box-sizing: border-box; }
-    textarea { resize: vertical; min-height: 90px; }
-    .preview-area { margin-top: 25px; position: relative; border-radius: 10px; overflow: hidden; background: #222; }
-    .image-wrapper { position: relative; width: 100%; }
-    .image-wrapper img { width: 100%; display: block; }
-    .overlay { position: absolute; color: black; white-space: pre-wrap; word-break: break-word; text-align: right; pointer-events: none; }
-    .svg-overlay { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
-    #submitBtn { background: #da9a00; color: #222; border: none; padding: 14px 26px; font-size: 20px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 20px; font-weight: bold; font-family: "MainFont"; }
-    #submitBtn:hover { filter: brightness(1.15); }
-    #notesLabel { margin-top: 30px; margin-bottom: 10px; display: block; }
-    .svg-text { dominant-baseline: central; text-anchor: middle; }
-  </style>
-</head>
-
-<body>
-<div class="container">
-  <h1>Engraving Preview Form</h1>
-
-  <label for="textInput">1. Enter the text you want engraved</label>
-  <input id="textInput" type="text" placeholder="Type engraving text here…" oninput="updatePreview()" />
-
-  <label for="fontSelect">2. Choose a font</label>
-  <select id="fontSelect" onchange="updateFontSettings()">
-    <option value="ScriptFont1">Script Font 1</option>
-    <option value="ScriptFont2">Script Font 2</option>
-    <option value="SerifFont">Serif Font</option>
-    <option value="SansSerif1">Sans Serif Font 1</option>
-    <option value="SansSerif2">Sans Serif Font 2</option>
-  </select>
-
-  <label for="sizeSelect">3. Select font size</label>
-  <select id="sizeSelect" onchange="updatePreview()">
-    <option value="small">Small (S)</option>
-    <option value="medium" selected>Medium (M)</option>
-    <option value="large">Large (L)</option>
-  </select>
-
-  <div class="preview-area" id="previewArea">
-    <div class="image-wrapper">
-      <img id="productImage" src="" alt="Board preview">
-      <!-- rectangle overlay -->
-      <div id="overlayText" class="overlay">Your text</div>
-      <!-- circular text overlay -->
-      <svg id="svgOverlay" class="svg-overlay" xmlns="http://www.w3.org/2000/svg"></svg>
-    </div>
-  </div>
-
-  <label id="notesLabel" for="notesBox">Additional notes for Lucky Penny (optional)</label>
-  <textarea id="notesBox" placeholder="Write any custom instructions here..."></textarea>
-
-  <button id="submitBtn" onclick="sendEmail()">Submit</button>
-</div>
-
-<script>
-// RECTANGLE FONT SETTINGS
-const FONT_SETTINGS = {
-  ScriptFont1: { small: 60, medium: 70, large: 80, bottom: "18%", right: "12%" },
-  ScriptFont2: { small: 50, medium: 60, large: 70, bottom: "16%", right: "12%" },
-  SerifFont:   { small: 40, medium: 50, large: 60, bottom: "10%", right: "12%" },
-  SansSerif1:  { small: 50, medium: 60, large: 70, bottom: "16%", right: "12%" },
-  SansSerif2:  { small: 45, medium: 55, large: 65, bottom: "16%", right: "12%" }
-};
-
-// CIRCULAR FONT SETTINGS
-const CIRCLE_FONT_SETTINGS = {
-  ScriptFont1: { small: 60, medium: 70, large: 80, radiusBase: 400 },
-  ScriptFont2: { small: 50, medium: 60, large: 70, radiusBase: 400 },
-  SerifFont:   { small: 40, medium: 50, large: 60, radiusBase: 400 },
-  SansSerif1:  { small: 50, medium: 60, large: 70, radiusBase: 400 },
-  SansSerif2:  { small: 45, medium: 55, large: 65, radiusBase: 400 }
-};
-
-// IMAGE MAP
-const images = {
-  "R0001": "Engaving crop test 1.png",
-  "R0002": "Engaving crop test 2.png",
-  "R0003": "Engaving crop test 3.png",
-  "R0004": "Engaving crop test 4.png",
-  "C001": "Engaving crop test 5.png",
-  "C002": "circle-board-2.png"
-};
-
-const EMAILJS_SERVICE_ID = "service_lk91mlq";
-const EMAILJS_TEMPLATE_ID = "template_n1bl34p";
-const EMAILJS_PUBLIC_KEY = "VQEb26gwHkvgcRIDg";
-emailjs.init(EMAILJS_PUBLIC_KEY);
-
-const overlayText = document.getElementById("overlayText");
-const svgOverlay = document.getElementById("svgOverlay");
-const productImage = document.getElementById("productImage");
-const textInput = document.getElementById("textInput");
-const fontSelect = document.getElementById("fontSelect");
-const sizeSelect = document.getElementById("sizeSelect");
-
-let currentId = null;
-let isCircle = false;
-
-function getQueryParam(name) { return new URLSearchParams(window.location.search).get(name); }
-function normalizeId(id){ if(!id) return null; if(id.startsWith("C") || id.startsWith("R")) return id; if(/^\d+$/.test(id)) return "R" + id.padStart(4,"0"); return id; }
-
-window.addEventListener("load", () => {
-  currentId = normalizeId(getQueryParam("id"));
-  isCircle = currentId && currentId.startsWith("C");
-
-  productImage.src = (currentId && images[currentId]) ? images[currentId] : "https://via.placeholder.com/600x400?text=Board+Preview";
-
-  productImage.addEventListener("load", () => {
-    svgOverlay.setAttribute("width", productImage.clientWidth);
-    svgOverlay.setAttribute("height", productImage.clientHeight);
-    svgOverlay.style.width = productImage.clientWidth + "px";
-    svgOverlay.style.height = productImage.clientHeight + "px";
-    updateFontSettings();
-  });
-
-  if(productImage.complete) productImage.dispatchEvent(new Event('load'));
-});
-
-function updateFontSettings() {
-  if(!isCircle){
-    const font = fontSelect.value;
-    const sizeName = sizeSelect.value;
-    const config = FONT_SETTINGS[font];
-    overlayText.style.display = "block";
-    overlayText.style.fontFamily = font;
-    overlayText.style.fontSize = config[sizeName] + "px";
-    overlayText.style.bottom = config.bottom;
-    overlayText.style.right = config.right;
-    svgOverlay.innerHTML = "";
-  } else {
-    overlayText.style.display = "none";
-    renderCurvedText();
-  }
-  updatePreview();
-}
-
-function updatePreview() {
-  if(!isCircle){
-    const font = fontSelect.value;
-    const sizeName = sizeSelect.value;
-    const config = FONT_SETTINGS[font];
-    overlayText.textContent = textInput.value || " ";
-    overlayText.style.fontFamily = font;
-    overlayText.style.fontSize = config[sizeName] + "px";
-    overlayText.style.bottom = config.bottom;
-    overlayText.style.right = config.right;
-  } else {
-    renderCurvedText();
-  }
-}
-
 function renderCurvedText() {
   const font = fontSelect.value;
   const sizeName = sizeSelect.value;
@@ -181,28 +7,55 @@ function renderCurvedText() {
   const w = productImage.clientWidth;
   const h = productImage.clientHeight;
   svgOverlay.setAttribute("viewBox", `0 0 ${w} ${h}`);
-  const cx = w / 2;
-  const cy = h / 2;
 
+  // -----------------------------
+  // 1️⃣ CENTER OF CIRCLE (can offset from true center)
+  // -----------------------------
+  let cx = w / 2;   // x-coordinate of circle center
+  let cy = h / 2;   // y-coordinate of circle center
+  // Example: move circle 20px right and 10px down
+  // cx += 20;
+  // cy += 10;
+
+  // -----------------------------
+  // 2️⃣ RADIUS OF CIRCLE
+  // -----------------------------
   const fontCircle = CIRCLE_FONT_SETTINGS[font] || { small: 50, medium: 60, large: 70, radiusBase: 400 };
   const fontSizePx = fontCircle[sizeName];
-  const radius = fontCircle.radiusBase;
+  const radius = fontCircle.radiusBase; // <-- CHANGE THIS to make circle bigger/smaller
 
-  // bottom half SE
-  const midAngle = 135 * Math.PI / 180;
-  const approxCharWidth = fontSizePx * 0.6;
+  // -----------------------------
+  // 3️⃣ MID-ANGLE FOR CURVED TEXT
+  // -----------------------------
+  // Angles are in radians. 0 = positive X axis (east). Quadrant 4 = bottom right.
+  // You want 45 degrees in Q4:
+  const midAngleDeg = 315;   // <-- CHANGE THIS to rotate the text around circle (degrees)
+  const midAngle = midAngleDeg * Math.PI / 180;
+
+  // -----------------------------
+  // 4️⃣ ARC ANGLE
+  // -----------------------------
+  const approxCharWidth = fontSizePx * 0.6; // rough estimate per character
   const approxTextWidth = Math.max(10, text.length * approxCharWidth);
   const arcAngle = Math.min(Math.PI * 1.4, approxTextWidth / radius);
 
   const startAngle = midAngle - arcAngle / 2;
   const endAngle = midAngle + arcAngle / 2;
+
+  // -----------------------------
+  // 5️⃣ START AND END COORDINATES
+  // -----------------------------
   const startX = cx + radius * Math.cos(startAngle);
   const startY = cy + radius * Math.sin(startAngle);
   const endX   = cx + radius * Math.cos(endAngle);
   const endY   = cy + radius * Math.sin(endAngle);
-  const largeArcFlag = (arcAngle > Math.PI) ? 1 : 0;
-  const sweepFlag = 0;
 
+  const largeArcFlag = (arcAngle > Math.PI) ? 1 : 0;
+  const sweepFlag = 0; // sweep = 0 for bottom half orientation
+
+  // -----------------------------
+  // 6️⃣ CREATE PATH
+  // -----------------------------
   const pathId = "arcPath";
   const svgNS = "http://www.w3.org/2000/svg";
   const path = document.createElementNS(svgNS, "path");
@@ -211,6 +64,9 @@ function renderCurvedText() {
   path.setAttribute("fill", "none");
   svgOverlay.appendChild(path);
 
+  // -----------------------------
+  // 7️⃣ CREATE TEXT ELEMENT
+  // -----------------------------
   const textElem = document.createElementNS(svgNS, "text");
   textElem.setAttribute("class", "svg-text");
   textElem.setAttribute("font-family", font);
@@ -219,7 +75,7 @@ function renderCurvedText() {
 
   const textPath = document.createElementNS(svgNS, "textPath");
   textPath.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "#" + pathId);
-  textPath.setAttribute("startOffset", "50%");
+  textPath.setAttribute("startOffset", "50%"); // center text along path
   textPath.setAttribute("dominant-baseline", "middle");
   textPath.setAttribute("text-anchor", "middle");
   textPath.textContent = text;
@@ -227,24 +83,3 @@ function renderCurvedText() {
   textElem.appendChild(textPath);
   svgOverlay.appendChild(textElem);
 }
-
-function sendEmail() {
-  html2canvas(document.getElementById("previewArea"), { scale: 0.5, useCORS: true }).then(canvas => {
-    const imgData = canvas.toDataURL("image/jpeg", 0.7);
-    const templateParams = {
-      engraving_text: textInput.value,
-      font: fontSelect.value,
-      size_label: sizeSelect.value,
-      notes: document.getElementById("notesBox").value,
-      board_id: currentId || "none",
-      screenshot: imgData,
-      to_email: "luckypennyww@gmail.com"
-    };
-    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
-      .then(() => alert("Your engraving request has been sent!"))
-      .catch(err => alert("Error sending email: " + JSON.stringify(err)));
-  });
-}
-</script>
-</body>
-</html>

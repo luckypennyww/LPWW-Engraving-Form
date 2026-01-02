@@ -93,6 +93,15 @@ input, select {
   </div>
 </div>
 
+<!-- Submit form -->
+<form id="submitForm" style="margin-top:20px;">
+  <label>Email:</label>
+  <input type="email" id="userEmail" required placeholder="Enter your email">
+  <button type="submit" style="
+      background:#da9a00; color:#222; padding:12px 24px; font-size:18px;
+      border:none; border-radius:6px; cursor:pointer;">Submit</button>
+</form>
+
 </div>
 
 <script>
@@ -150,6 +159,16 @@ function updatePreview() {
   overlayText.style.display = "none";
   svgOverlay.innerHTML = "";
 
+  // ⚡ Ensure the image is loaded
+  if (!productImage.complete || productImage.naturalWidth === 0) {
+    productImage.onload = updatePreview;
+    return;
+  }
+
+  // ⚡ Set explicit SVG size
+  svgOverlay.setAttribute("width", productImage.clientWidth);
+  svgOverlay.setAttribute("height", productImage.clientHeight);
+
   const w = productImage.clientWidth;
   const h = productImage.clientHeight;
   const cx = w/2 + CIRCLE_TUNING.offsetX;
@@ -180,7 +199,7 @@ function updatePreview() {
   textEl.setAttribute("fill","black");
 
   const textPath = document.createElementNS("http://www.w3.org/2000/svg","textPath");
-  textPath.setAttributeNS("http://www.w3.org/1999/xlink","href","#curve");
+  textPath.setAttribute("href","#curve"); // modern href
   textPath.setAttribute("startOffset","50%");
   textPath.setAttribute("text-anchor","middle");
   textPath.textContent = text;
@@ -188,6 +207,25 @@ function updatePreview() {
   textEl.appendChild(textPath);
   svgOverlay.appendChild(textEl);
 }
+
+// ⚡ Submit button email
+document.getElementById("submitForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  const email = document.getElementById("userEmail").value;
+  const text = textInput.value;
+  const font = fontSelect.value;
+  const size = sizeSelect.value;
+
+  const subject = encodeURIComponent("Engraving Order");
+  const body = encodeURIComponent(
+    `Text: ${text}\nFont: ${font}\nSize: ${size}\nProduct ID: ${id}`
+  );
+
+  window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+});
+
+// Initial preview
+updatePreview();
 </script>
 </body>
 </html>

@@ -5,9 +5,6 @@
 <title>Engraving Preview — LPWW</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 
-<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-
 <style>
 @font-face { font-family:"ScriptFont1"; src:url("longtail.ttf"); }
 @font-face { font-family:"ScriptFont2"; src:url("brittany-signature-script.regular.ttf"); }
@@ -17,22 +14,42 @@
 @font-face { font-family:"MainFont"; src:url("BebasNeue-Regular.ttf"); }
 
 body {
-  font-family: "MainFont";
+  font-family:"MainFont", system-ui, sans-serif;
   background:#222;
+  margin:0;
   display:flex;
   justify-content:center;
-  margin:0;
 }
 
-.container { max-width:900px; width:100%; }
+.container { max-width:900px; width:100%; padding:20px; }
 
-.preview-area { position:relative; margin-top:20px; }
+h1 { color:#da9a00; font-size:48px; }
+
+label { color:#da9a00; font-size:18pt; display:block; margin-bottom:6px; }
+
+input, select {
+  width:100%;
+  padding:12px;
+  margin-bottom:20px;
+  font-size:18px;
+  border-radius:6px;
+  border:none;
+}
+
+.preview-area {
+  position:relative;
+  margin-top:20px;
+}
+
 .image-wrapper img { width:100%; display:block; }
 
 .overlay {
   position:absolute;
+  right:12%;
+  bottom:16%;
   color:black;
   text-align:right;
+  white-space:pre-wrap;
   pointer-events:none;
 }
 
@@ -47,8 +64,12 @@ body {
 <body>
 <div class="container">
 
-<input id="textInput" placeholder="Engraving text" oninput="updatePreview()" />
+<h1>Engraving Preview</h1>
 
+<label>Text</label>
+<input id="textInput" oninput="updatePreview()" />
+
+<label>Font</label>
 <select id="fontSelect" onchange="updatePreview()">
   <option value="ScriptFont1">Script Font 1</option>
   <option value="ScriptFont2">Script Font 2</option>
@@ -57,13 +78,14 @@ body {
   <option value="SansSerif2">Sans Serif 2</option>
 </select>
 
+<label>Size</label>
 <select id="sizeSelect" onchange="updatePreview()">
   <option value="small">Small</option>
   <option value="medium" selected>Medium</option>
   <option value="large">Large</option>
 </select>
 
-<div class="preview-area" id="previewArea">
+<div class="preview-area">
   <div class="image-wrapper">
     <img id="productImage">
     <div id="overlayText" class="overlay"></div>
@@ -74,6 +96,15 @@ body {
 </div>
 
 <script>
+/***** 🔴 CIRCULAR TEXT TUNING — EDIT THESE ONLY 🔴 *****/
+const CIRCLE_TUNING = {
+  radius: 420,
+  angleDeg: 315,
+  offsetX: 0,
+  offsetY: 0
+};
+/***** 🔴 END CIRCULAR TUNING 🔴 *****/
+
 const FONT_SETTINGS = {
   ScriptFont1:{ small:60, medium:70, large:80, bottom:"18%", right:"12%" },
   ScriptFont2:{ small:50, medium:60, large:70, bottom:"16%", right:"12%" },
@@ -82,97 +113,80 @@ const FONT_SETTINGS = {
   SansSerif2:{ small:45, medium:55, large:65, bottom:"16%", right:"12%" }
 };
 
-const CIRCLE_FONT_SETTINGS = {
-  ScriptFont1:{ small:60, medium:70, large:80 },
-  ScriptFont2:{ small:50, medium:60, large:70 },
-  SerifFont:{ small:40, medium:50, large:60 },
-  SansSerif1:{ small:50, medium:60, large:70 },
-  SansSerif2:{ small:45, medium:55, large:65 }
-};
-
 const images = {
-  "R0001":"Engaving crop test 1.png",
-  "C0001":"circle-board.png"
+  "R0001":"Engraving board 1.png",
+  "C0001":"Engraving crop test 5.png"
 };
-
-const overlayText = document.getElementById("overlayText");
-const svgOverlay = document.getElementById("svgOverlay");
-const productImage = document.getElementById("productImage");
 
 const textInput = document.getElementById("textInput");
 const fontSelect = document.getElementById("fontSelect");
 const sizeSelect = document.getElementById("sizeSelect");
+const overlayText = document.getElementById("overlayText");
+const svgOverlay = document.getElementById("svgOverlay");
+const productImage = document.getElementById("productImage");
 
-const id = new URLSearchParams(location.search).get("id") || "R0001";
-const isCircle = id.startsWith("C");
-productImage.src = images[id];
+const id = new URLSearchParams(location.search).get("id");
+const isCircle = id && id.startsWith("C");
 
-productImage.onload = updatePreview;
+productImage.src = images[id] || "";
 
-function updatePreview(){
-  if(!isCircle){
-    svgOverlay.innerHTML="";
-    overlayText.style.display="block";
-    const cfg = FONT_SETTINGS[fontSelect.value];
-    overlayText.textContent = textInput.value;
-    overlayText.style.fontFamily = fontSelect.value;
-    overlayText.style.fontSize = cfg[sizeSelect.value]+"px";
+function updatePreview() {
+  const font = fontSelect.value;
+  const size = sizeSelect.value;
+  const text = textInput.value || "";
+
+  if (!isCircle) {
+    overlayText.style.display = "block";
+    svgOverlay.innerHTML = "";
+    const cfg = FONT_SETTINGS[font];
+    overlayText.textContent = text;
+    overlayText.style.fontFamily = font;
+    overlayText.style.fontSize = cfg[size] + "px";
     overlayText.style.bottom = cfg.bottom;
     overlayText.style.right = cfg.right;
     return;
   }
-  overlayText.style.display="none";
-  renderCurvedText();
-}
 
-function renderCurvedText(){
-  svgOverlay.innerHTML="";
+  overlayText.style.display = "none";
+  svgOverlay.innerHTML = "";
+
   const w = productImage.clientWidth;
   const h = productImage.clientHeight;
-  svgOverlay.setAttribute("viewBox",`0 0 ${w} ${h}`);
+  const cx = w/2 + CIRCLE_TUNING.offsetX;
+  const cy = h/2 + CIRCLE_TUNING.offsetY;
 
-  // 🔧 MAIN CONTROLS — CHANGE THESE
-  const MID_ANGLE_DEG = 315;   // rotation (Q4)
-  const BASE_RADIUS   = 420;   // BIGGER = closer to edge
-  const OFFSET_X      = 0;     // move right (+)
-  const OFFSET_Y      = 0;     // move down (+)
-
-  const font = fontSelect.value;
-  const size = sizeSelect.value;
-  const fontSize = CIRCLE_FONT_SETTINGS[font][size];
-
-  const cx = w/2 + OFFSET_X;
-  const cy = h/2 + OFFSET_Y;
-
-  const mid = MID_ANGLE_DEG * Math.PI/180;
-  const arc = Math.min(Math.PI*1.3, (textInput.value.length * fontSize * 0.6)/BASE_RADIUS);
+  const radius = CIRCLE_TUNING.radius;
+  const mid = CIRCLE_TUNING.angleDeg * Math.PI / 180;
+  const fontSize = FONT_SETTINGS[font][size];
+  const arc = Math.min(Math.PI, (text.length * fontSize * 0.6) / radius);
 
   const start = mid - arc/2;
-  const end   = mid + arc/2;
+  const end = mid + arc/2;
 
-  const sx = cx + BASE_RADIUS * Math.cos(start);
-  const sy = cy + BASE_RADIUS * Math.sin(start);
-  const ex = cx + BASE_RADIUS * Math.cos(end);
-  const ey = cy + BASE_RADIUS * Math.sin(end);
+  const sx = cx + radius * Math.cos(start);
+  const sy = cy + radius * Math.sin(start);
+  const ex = cx + radius * Math.cos(end);
+  const ey = cy + radius * Math.sin(end);
 
   const path = document.createElementNS("http://www.w3.org/2000/svg","path");
-  path.setAttribute("d",`M ${sx} ${sy} A ${BASE_RADIUS} ${BASE_RADIUS} 0 0 0 ${ex} ${ey}`);
-  path.setAttribute("id","arc");
-
-  const text = document.createElementNS("http://www.w3.org/2000/svg","text");
-  text.setAttribute("font-family",font);
-  text.setAttribute("font-size",fontSize);
-  text.setAttribute("fill","black");
-
-  const tp = document.createElementNS("http://www.w3.org/2000/svg","textPath");
-  tp.setAttributeNS("http://www.w3.org/1999/xlink","href","#arc");
-  tp.setAttribute("startOffset","50%");
-  tp.setAttribute("text-anchor","middle");
-  tp.textContent = textInput.value;
-
-  text.appendChild(tp);
+  path.setAttribute("id","curve");
+  path.setAttribute("d",`M ${sx} ${sy} A ${radius} ${radius} 0 0 0 ${ex} ${ey}`);
+  path.setAttribute("fill","none");
   svgOverlay.appendChild(path);
-  svgOverlay.appendChild(text);
+
+  const textEl = document.createElementNS("http://www.w3.org/2000/svg","text");
+  textEl.setAttribute("font-family",font);
+  textEl.setAttribute("font-size",fontSize);
+  textEl.setAttribute("fill","black");
+
+  const textPath = document.createElementNS("http://www.w3.org/2000/svg","textPath");
+  textPath.setAttributeNS("http://www.w3.org/1999/xlink","href","#curve");
+  textPath.setAttribute("startOffset","50%");
+  textPath.setAttribute("text-anchor","middle");
+  textPath.textContent = text;
+
+  textEl.appendChild(textPath);
+  svgOverlay.appendChild(textEl);
 }
 </script>
 </body>

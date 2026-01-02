@@ -108,7 +108,7 @@ input, select {
 /***** 🔴 CIRCULAR TEXT TUNING — EDIT THESE ONLY 🔴 *****/
 const CIRCLE_TUNING = {
   radius: 420,
-  angleDeg: 315,
+  angleDeg: 180, // center pointing left for bottom-right
   offsetX: 0,
   offsetY: 0
 };
@@ -159,7 +159,7 @@ function updatePreview() {
   overlayText.style.display = "none";
   svgOverlay.innerHTML = "";
 
-  // ⚡ Ensure the image is loaded
+  // Ensure image is loaded
   if (!productImage.complete || productImage.naturalWidth === 0) {
     productImage.onload = updatePreview;
     return;
@@ -169,11 +169,11 @@ function updatePreview() {
   const fontSize = cfg[size];
   const radius = CIRCLE_TUNING.radius;
 
-  // Convert percentages to pixels for bottom/right
+  // Anchor bottom-right in pixels
   const rightPx = productImage.clientWidth * parseFloat(cfg.right) / 100;
   const bottomPx = productImage.clientHeight * parseFloat(cfg.bottom) / 100;
 
-  // Circle center relative to bottom-right corner
+  // Circle center for bottom-right arc
   const cx = productImage.clientWidth - rightPx + CIRCLE_TUNING.offsetX;
   const cy = productImage.clientHeight - bottomPx + CIRCLE_TUNING.offsetY;
 
@@ -183,10 +183,11 @@ function updatePreview() {
   const start = mid - arc/2;
   const end = mid + arc/2;
 
+  // Flip y-axis to curve above bottom
   const sx = cx + radius * Math.cos(start);
-  const sy = cy + radius * Math.sin(start);
+  const sy = cy - radius * Math.sin(start);
   const ex = cx + radius * Math.cos(end);
-  const ey = cy + radius * Math.sin(end);
+  const ey = cy - radius * Math.sin(end);
 
   const path = document.createElementNS("http://www.w3.org/2000/svg","path");
   path.setAttribute("id","curve");
@@ -209,7 +210,7 @@ function updatePreview() {
   svgOverlay.appendChild(textEl);
 }
 
-// ⚡ Submit button email
+// Submit button email
 document.getElementById("submitForm").addEventListener("submit", function(e){
   e.preventDefault();
   const email = document.getElementById("userEmail").value;

@@ -1,233 +1,427 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<title>Engraving Preview — LPWW</title>
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8" />
+  <title>Engraving Preview — LPWW</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
 
-<style>
-@font-face { font-family:"ScriptFont1"; src:url("longtail.ttf"); }
-@font-face { font-family:"ScriptFont2"; src:url("brittany-signature-script.regular.ttf"); }
-@font-face { font-family:"SerifFont"; src:url("kugile.regular.ttf"); }
-@font-face { font-family:"SansSerif1"; src:url("mochademo.mocha-demo.ttf"); }
-@font-face { font-family:"SansSerif2"; src:url("Berista.ttf"); }
-@font-face { font-family:"MainFont"; src:url("BebasNeue-Regular.ttf"); }
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <!-- html2canvas (for screenshot) -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
-body {
-  font-family:"MainFont", system-ui, sans-serif;
-  background:#222;
-  margin:0;
-  display:flex;
-  justify-content:center;
-}
+  <style>
+    /* FONTS */
+    @font-face { font-family: "ScriptFont1"; src: url("longtail.ttf") format("truetype"); }
+    @font-face { font-family: "ScriptFont2"; src: url("brittany-signature-script.regular.ttf") format("truetype"); }
+    @font-face { font-family: "SerifFont"; src: url("kugile.regular.ttf") format("truetype"); }
+    @font-face { font-family: "SansSerif1"; src: url("mochademo.mocha-demo.ttf") format("truetype"); }
+    @font-face { font-family: "SansSerif2"; src: url("Berista.ttf") format("truetype"); }
+    @font-face { font-family: "MainFont"; src: url("BebasNeue-Regular.ttf") format("truetype"); }
 
-.container { max-width:900px; width:100%; padding:20px; }
+    body {
+      font-family: "MainFont", system-ui, sans-serif;
+      margin: 1px;
+      display: flex;
+      justify-content: center;
+      background: #222222;
+      color: #222222;
+    }
 
-h1 { color:#da9a00; font-size:48px; }
+    .container { width: 100%; max-width: 900px; }
 
-label { color:#da9a00; font-size:18pt; display:block; margin-bottom:6px; }
+    h1 { font-size: 50px; margin-bottom: 20px; color: #da9a00; }
 
-input, select {
-  width:100%;
-  padding:12px;
-  margin-bottom:20px;
-  font-size:18px;
-  border-radius:6px;
-  border:none;
-}
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 6px;
+      font-size: 18pt;
+      color: #da9a00;
+    }
 
-.preview-area {
-  position:relative;
-  margin-top:20px;
-}
+    input[type="text"], select, textarea {
+      width: 100%;
+      padding: 12px;
+      font-size: 18px;
+      border-radius: 6px;
+      border: none;
+      margin-bottom: 20px;
+      font-family: inherit;
+      color: #222222;
+      box-sizing: border-box;
+    }
 
-.image-wrapper img { width:100%; display:block; }
+    textarea { resize: vertical; min-height: 90px; }
 
-.overlay {
-  position:absolute;
-  right:12%;
-  bottom:16%;
-  color:black;
-  text-align:right;
-  white-space:pre-wrap;
-  pointer-events:none;
-}
+    /* PREVIEW AREA */
+    .preview-area {
+      margin-top: 25px;
+      position: relative;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #222222;
+    }
 
-.svg-overlay {
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-}
-</style>
+    .image-wrapper { position: relative; width: 100%; }
+    .image-wrapper img { width: 100%; display: block; }
+
+    /* rectangle overlay (existing behavior) */
+    .overlay {
+      position: absolute;
+      color: black;
+      white-space: pre-wrap;
+      word-break: break-word;
+      text-align: right;
+      pointer-events: none;
+    }
+
+    /* SVG overlay for curved text */
+    .svg-overlay {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    /* SUBMIT BUTTON */
+    #submitBtn {
+      background: #da9a00;
+      color: #222222;
+      border: none;
+      padding: 14px 26px;
+      font-size: 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 20px;
+      font-weight: bold;
+      font-family: "MainFont";
+    }
+    #submitBtn:hover { filter: brightness(1.15); }
+
+    /* NOTES LABEL SPACING */
+    #notesLabel {
+      margin-top: 30px;   /* space from image */
+      margin-bottom: 10px; /* space between label and textarea */
+      display: block;
+    }
+
+    .svg-text { dominant-baseline: central; text-anchor: middle; }
+  </style>
 </head>
 
 <body>
 <div class="container">
+  <h1>Engraving Preview Form</h1>
 
-<h1>Engraving Preview</h1>
+  <label for="textInput">1. Enter the text you want engraved</label>
+  <input id="textInput" type="text" placeholder="Type engraving text here…" oninput="updatePreview()" />
 
-<label>Text</label>
-<input id="textInput" oninput="updatePreview()" />
+  <label for="fontSelect">2. Choose a font</label>
+  <select id="fontSelect" onchange="updateFontSettings()">
+    <option value="ScriptFont1">Script Font 1</option>
+    <option value="ScriptFont2">Script Font 2</option>
+    <option value="SerifFont">Serif Font</option>
+    <option value="SansSerif1">Sans Serif Font 1</option>
+    <option value="SansSerif2">Sans Serif Font 2</option>
+  </select>
 
-<label>Font</label>
-<select id="fontSelect" onchange="updatePreview()">
-  <option value="ScriptFont1">Script Font 1</option>
-  <option value="ScriptFont2">Script Font 2</option>
-  <option value="SerifFont">Serif Font</option>
-  <option value="SansSerif1">Sans Serif 1</option>
-  <option value="SansSerif2">Sans Serif 2</option>
-</select>
+  <label for="sizeSelect">3. Select font size</label>
+  <select id="sizeSelect" onchange="updatePreview()">
+    <option value="small">Small (S)</option>
+    <option value="medium" selected>Medium (M)</option>
+    <option value="large">Large (L)</option>
+  </select>
 
-<label>Size</label>
-<select id="sizeSelect" onchange="updatePreview()">
-  <option value="small">Small</option>
-  <option value="medium" selected>Medium</option>
-  <option value="large">Large</option>
-</select>
-
-<div class="preview-area">
-  <div class="image-wrapper">
-    <img id="productImage">
-    <div id="overlayText" class="overlay"></div>
-    <svg id="svgOverlay" class="svg-overlay"></svg>
+  <div class="preview-area" id="previewArea">
+    <div class="image-wrapper">
+      <img id="productImage" src="" alt="Board preview">
+      <!-- rectangle overlay -->
+      <div id="overlayText" class="overlay">Your text</div>
+      <!-- circular text overlay (SVG) -->
+      <svg id="svgOverlay" class="svg-overlay" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
   </div>
-</div>
 
-<!-- Submit form -->
-<form id="submitForm" style="margin-top:20px;">
-  <label>Email:</label>
-  <input type="email" id="userEmail" required placeholder="Enter your email">
-  <button type="submit" style="
-      background:#da9a00; color:#222; padding:12px 24px; font-size:18px;
-      border:none; border-radius:6px; cursor:pointer;">Submit</button>
-</form>
+  <label id="notesLabel" for="notesBox">Additional notes for Lucky Penny (optional)</label>
+  <textarea id="notesBox" placeholder="Write any custom instructions here..."></textarea>
 
+  <button id="submitBtn" onclick="sendEmail()">Submit</button>
 </div>
 
 <script>
-/***** 🔴 CIRCULAR TEXT TUNING — EDIT THESE ONLY 🔴 *****/
-const CIRCLE_TUNING = {
-  radius: 420,
-  angleDeg: 180, // center pointing left for bottom-right
-  offsetX: 0,
-  offsetY: 0
-};
-/***** 🔴 END CIRCULAR TUNING 🔴 *****/
-
+/* =========================
+   CONFIG - RECTANGLE (unchanged)
+   ========================= */
 const FONT_SETTINGS = {
-  ScriptFont1:{ small:60, medium:70, large:80, bottom:"18%", right:"12%" },
-  ScriptFont2:{ small:50, medium:60, large:70, bottom:"16%", right:"12%" },
-  SerifFont:{ small:40, medium:50, large:60, bottom:"10%", right:"12%" },
-  SansSerif1:{ small:50, medium:60, large:70, bottom:"16%", right:"12%" },
-  SansSerif2:{ small:45, medium:55, large:65, bottom:"16%", right:"12%" }
+  ScriptFont1: { small: 60, medium: 70, large: 80, bottom: "18%", right: "12%" },
+  ScriptFont2: { small: 50, medium: 60, large: 70, bottom: "16%", right: "12%" },
+  SerifFont:   { small: 40, medium: 50, large: 60, bottom: "10%", right: "12%" },
+  SansSerif1:  { small: 50, medium: 60, large: 70, bottom: "16%", right: "12%" },
+  SansSerif2:  { small: 45, medium: 55, large: 65, bottom: "16%", right: "12%" }
 };
 
+/* =========================
+   CONFIG - CIRCLE (per-font)
+   Change radiusBase here to increase/decrease the circular arc radius.
+   (Large default = 400)
+   ========================= */
+const CIRCLE_FONT_SETTINGS = {
+  ScriptFont1: { small: 60, medium: 70, large: 80, radiusBase: 400 },
+  ScriptFont2: { small: 50, medium: 60, large: 70, radiusBase: 400 },
+  SerifFont:   { small: 40, medium: 50, large: 60, radiusBase: 400 },
+  SansSerif1:  { small: 50, medium: 60, large: 70, radiusBase: 400 },
+  SansSerif2:  { small: 45, medium: 55, large: 65, radiusBase: 400 }
+};
+
+/* =========================
+   Per-board overrides (optional)
+   Example usage:
+   CIRCLE_BOARD_SETTINGS["C001"] = { radiusOffset: -10, angleOffsetDeg: 6, cxOffset: 10, cyOffset: -5 };
+   ========================= */
+const CIRCLE_BOARD_SETTINGS = {
+  // "C001": { radiusOffset: -10, angleOffsetDeg: 0, cxOffset: 0, cyOffset: 0 }
+};
+
+/* =========================
+   IMAGE MAP: update filenames here
+   Use IDs that start with "C" for circular boards and "R" for rectangles.
+   Example URLs:
+     https://.../?id=C001   (circular)
+     https://.../?id=R0001  (rectangular)
+   ========================= */
 const images = {
-  "R0001":"Engraving board 1.png",
-  "C0001":"Engaving crop test 5.png"
+  "R0001": "Engraving board 1.png",
+  "R0002": "Engraving board 2.png",
+  "R0003": "Engraving board 3.png",
+  "R0004": "Engaving crop test 4.png",
+  "C0001": "Engaving crop test 5.png",
+  "C0002": "circle-board-2.png"
 };
 
-const textInput = document.getElementById("textInput");
-const fontSelect = document.getElementById("fontSelect");
-const sizeSelect = document.getElementById("sizeSelect");
+/* =========================
+   EmailJS config (leave as you had it)
+   ========================= */
+const EMAILJS_SERVICE_ID = "service_lk91mlq";
+const EMAILJS_TEMPLATE_ID = "template_n1bl34p";
+const EMAILJS_PUBLIC_KEY = "VQEb26gwHkvgcRIDg";
+emailjs.init(EMAILJS_PUBLIC_KEY);
+
+/* =========================
+   DOM references
+   ========================= */
 const overlayText = document.getElementById("overlayText");
 const svgOverlay = document.getElementById("svgOverlay");
 const productImage = document.getElementById("productImage");
+const textInput = document.getElementById("textInput");
+const fontSelect = document.getElementById("fontSelect");
+const sizeSelect = document.getElementById("sizeSelect");
 
-const id = new URLSearchParams(location.search).get("id");
-const isCircle = id && id.startsWith("C");
+let currentId = null;
+let isCircle = false;
 
-productImage.src = images[id] || "";
+/* =========================
+   TUNING: where to change placement/angle/radius
+   - MID_ANGLE_DEG => 315 is 45° clockwise from 0 (Q4 / southeast)
+   - If you prefer 45° clockwise from 0, use 315 (we use 315 here)
+   - radiusBase is in pixels (per-font above)
+   - You can also offset center via CIRCLE_CENTER_OFFSET
+   ========================= */
+const MID_ANGLE_DEG = 315; // <-- change this to rotate the arc (0=east, 90=north, 180=west, 270=south)
+const CIRCLE_CENTER_OFFSET = { x: 0, y: 0 }; // <-- change to move the circle center (in px)
+
+/* =========================
+   Helpers
+   ========================= */
+function getQueryParam(name) {
+  return new URLSearchParams(window.location.search).get(name);
+}
+
+function normalizeId(id){
+  if(!id) return null;
+  if(id.startsWith("C") || id.startsWith("R")) return id;
+  if(/^\d+$/.test(id)) return "R" + id.padStart(4,"0");
+  return id;
+}
+
+/* =========================
+   Initialize image and render
+   ========================= */
+window.addEventListener("load", () => {
+  currentId = normalizeId(getQueryParam("id"));
+  isCircle = currentId && currentId.startsWith("C");
+
+  productImage.src = (currentId && images[currentId]) ? images[currentId] : "https://via.placeholder.com/600x400?text=Board+Preview";
+  productImage.addEventListener("load", () => {
+    // size svg overlay to match image
+    svgOverlay.setAttribute("width", productImage.clientWidth);
+    svgOverlay.setAttribute("height", productImage.clientHeight);
+    svgOverlay.style.width = productImage.clientWidth + "px";
+    svgOverlay.style.height = productImage.clientHeight + "px";
+
+    // initial render
+    updateFontSettings();
+  });
+
+  if(productImage.complete) productImage.dispatchEvent(new Event('load'));
+});
+
+/* =========================
+   Rectangle / Circle update handlers
+   ========================= */
+function updateFontSettings() {
+  const font = fontSelect.value;
+  if (!isCircle) {
+    // rectangle: show old overlay text
+    const sizeName = sizeSelect.value;
+    const config = FONT_SETTINGS[font];
+    overlayText.style.display = "block";
+    overlayText.style.fontFamily = font;
+    overlayText.style.fontSize = config[sizeName] + "px";
+    overlayText.style.bottom = config.bottom;
+    overlayText.style.right = config.right;
+    svgOverlay.innerHTML = "";
+  } else {
+    overlayText.style.display = "none";
+    renderCurvedText(); // draw SVG path + text
+  }
+  updatePreview();
+}
 
 function updatePreview() {
   const font = fontSelect.value;
-  const size = sizeSelect.value;
-  const text = textInput.value || "";
+  const sizeName = sizeSelect.value;
+  const text = textInput.value || " ";
 
   if (!isCircle) {
-    overlayText.style.display = "block";
-    svgOverlay.innerHTML = "";
-    const cfg = FONT_SETTINGS[font];
+    // rectangle behavior (unchanged)
+    const config = FONT_SETTINGS[font];
     overlayText.textContent = text;
     overlayText.style.fontFamily = font;
-    overlayText.style.fontSize = cfg[size] + "px";
-    overlayText.style.bottom = cfg.bottom;
-    overlayText.style.right = cfg.right;
+    overlayText.style.fontSize = config[sizeName] + "px";
+    overlayText.style.bottom = config.bottom;
+    overlayText.style.right = config.right;
+    svgOverlay.innerHTML = "";
     return;
   }
 
-  overlayText.style.display = "none";
+  // circle mode: redraw curved text
+  renderCurvedText();
+}
+
+/* =========================
+   CURVED TEXT (SVG textPath)
+   - Only used for circular boards (IDs starting with C)
+   - Tuning points are clearly labeled above (MID_ANGLE_DEG and CIRCLE_FONT_SETTINGS)
+   ========================= */
+function renderCurvedText() {
+  const font = fontSelect.value;
+  const sizeName = sizeSelect.value;
+  const text = textInput.value || " ";
+
+  // clear previous
   svgOverlay.innerHTML = "";
 
-  // Ensure image is loaded
-  if (!productImage.complete || productImage.naturalWidth === 0) {
-    productImage.onload = updatePreview;
-    return;
-  }
+  // svg dimensions
+  const w = productImage.clientWidth;
+  const h = productImage.clientHeight;
+  svgOverlay.setAttribute("viewBox", `0 0 ${w} ${h}`);
 
-  const cfg = FONT_SETTINGS[font];
-  const fontSize = cfg[size];
-  const radius = CIRCLE_TUNING.radius;
+  // center (you can offset here if you want)
+  let cx = w / 2 + (CIRCLE_BOARD_SETTINGS[currentId] && CIRCLE_BOARD_SETTINGS[currentId].cxOffset ? CIRCLE_BOARD_SETTINGS[currentId].cxOffset : 0) + CIRCLE_CENTER_OFFSET.x;
+  let cy = h / 2 + (CIRCLE_BOARD_SETTINGS[currentId] && CIRCLE_BOARD_SETTINGS[currentId].cyOffset ? CIRCLE_BOARD_SETTINGS[currentId].cyOffset : 0) + CIRCLE_CENTER_OFFSET.y;
 
-  // Anchor bottom-right in pixels
-  const rightPx = productImage.clientWidth * parseFloat(cfg.right) / 100;
-  const bottomPx = productImage.clientHeight * parseFloat(cfg.bottom) / 100;
+  // radius & font size from settings
+  const fontCircle = CIRCLE_FONT_SETTINGS[font] || { small: 50, medium: 60, large: 70, radiusBase: Math.min(w,h)/3 };
+  const fontSizePx = fontCircle[sizeName] || 50;
+  const baseRadius = (fontCircle.radiusBase !== undefined) ? fontCircle.radiusBase : Math.min(w,h)/3;
+  const boardCfg = (currentId && CIRCLE_BOARD_SETTINGS[currentId]) ? CIRCLE_BOARD_SETTINGS[currentId] : {};
+  const radius = baseRadius + (boardCfg.radiusOffset || 0);
 
-  // Circle center for bottom-right arc
-  const cx = productImage.clientWidth - rightPx + CIRCLE_TUNING.offsetX;
-  const cy = productImage.clientHeight - bottomPx + CIRCLE_TUNING.offsetY;
+  // ** MID ANGLE **
+  // MID_ANGLE_DEG is the direction the arc points toward (degrees).
+  // We default to MID_ANGLE_DEG = 315 (i.e. bottom-right / southeast),
+  // which is 45° clockwise from 0° (positive X axis).
+  const midAngleDeg = (boardCfg.angleOffsetDeg || 0) + MID_ANGLE_DEG;
+  const midAngle = midAngleDeg * Math.PI / 180;
 
-  const mid = CIRCLE_TUNING.angleDeg * Math.PI / 180;
-  const arc = Math.min(Math.PI, (text.length * fontSize * 0.6) / radius);
+  // estimate arc span from text length and font size
+  const approxCharWidth = fontSizePx * 0.6; // rough char width
+  const approxTextWidth = Math.max(10, text.length * approxCharWidth);
+  const arcAngle = Math.min(Math.PI * 1.6, approxTextWidth / radius); // cap at ~1.6π
 
-  const start = mid - arc/2;
-  const end = mid + arc/2;
+  // start/end angles (radians)
+  const startAngle = midAngle - arcAngle / 2;
+  const endAngle = midAngle + arcAngle / 2;
 
-  // Flip y-axis to curve above bottom
-  const sx = cx + radius * Math.cos(start);
-  const sy = cy - radius * Math.sin(start);
-  const ex = cx + radius * Math.cos(end);
-  const ey = cy - radius * Math.sin(end);
+  // compute start/end coordinates on circle
+  const startX = cx + radius * Math.cos(startAngle);
+  const startY = cy + radius * Math.sin(startAngle);
+  const endX   = cx + radius * Math.cos(endAngle);
+  const endY   = cy + radius * Math.sin(endAngle);
 
-  const path = document.createElementNS("http://www.w3.org/2000/svg","path");
-  path.setAttribute("id","curve");
-  path.setAttribute("d",`M ${sx} ${sy} A ${radius} ${radius} 0 0 0 ${ex} ${ey}`);
-  path.setAttribute("fill","none");
+  const largeArcFlag = (arcAngle > Math.PI) ? 1 : 0;
+
+  // sweepFlag controls the direction the arc is drawn.
+  // For bottom half readable text we use sweepFlag = 0 (works with midAngle around 315).
+  // If your curved text reads backwards or upside-down, try toggling this between 0 and 1.
+  const sweepFlag = 0;
+
+  // build the path and textPath
+  const pathId = "arcPath";
+  const svgNS = "http://www.w3.org/2000/svg";
+
+  const path = document.createElementNS(svgNS, "path");
+  path.setAttribute("d", `M ${startX} ${startY} A ${radius} ${radius} 0 ${largeArcFlag} ${sweepFlag} ${endX} ${endY}`);
+  path.setAttribute("id", pathId);
+  path.setAttribute("fill", "none");
   svgOverlay.appendChild(path);
 
-  const textEl = document.createElementNS("http://www.w3.org/2000/svg","text");
-  textEl.setAttribute("font-family", font);
-  textEl.setAttribute("font-size", fontSize);
-  textEl.setAttribute("fill","black");
+  const textElem = document.createElementNS(svgNS, "text");
+  textElem.setAttribute("class", "svg-text");
+  textElem.setAttribute("font-family", font);
+  textElem.setAttribute("font-size", fontSizePx + "px");
+  textElem.setAttribute("fill", "black");
 
-  const textPath = document.createElementNS("http://www.w3.org/2000/svg","textPath");
-  textPath.setAttribute("href", "#curve");
-  textPath.setAttribute("startOffset", "50%");
+  const textPath = document.createElementNS(svgNS, "textPath");
+  textPath.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "#" + pathId);
+  textPath.setAttribute("startOffset", "50%"); // center text along path
+  textPath.setAttribute("dominant-baseline", "middle");
   textPath.setAttribute("text-anchor", "middle");
   textPath.textContent = text;
 
-  textEl.appendChild(textPath);
-  svgOverlay.appendChild(textEl);
+  textElem.appendChild(textPath);
+  svgOverlay.appendChild(textElem);
 }
 
-// Submit button email
-document.getElementById("submitForm").addEventListener("submit", function(e){
-  e.preventDefault();
-  const email = document.getElementById("userEmail").value;
-  const text = textInput.value;
-  const font = fontSelect.value;
-  const size = sizeSelect.value;
+/* =========================
+   SEND EMAIL (screenshot as compressed JPEG)
+   ========================= */
+function sendEmail() {
+  const previewArea = document.getElementById("previewArea");
 
-  const subject = encodeURIComponent("Engraving Order");
-  const body = encodeURIComponent(
-    `Text: ${text}\nFont: ${font}\nSize: ${size}\nProduct ID: ${id}`
-  );
+  html2canvas(previewArea, { scale: 0.5, useCORS: true }).then(canvas => {
+    const imgData = canvas.toDataURL("image/jpeg", 0.7); // compressed JPEG
 
-  window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-});
+    const templateParams = {
+      engraving_text: textInput.value,
+      font: fontSelect.value,
+      size_label: sizeSelect.value,
+      notes: document.getElementById("notesBox").value,
+      board_id: currentId || "none",
+      screenshot: imgData,
+      to_email: "luckypennyww@gmail.com"
+    };
 
-// Initial preview
-updatePreview();
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
+      .then(() => alert("Your engraving request has been sent!"))
+      .catch(err => alert("Error sending email: " + JSON.stringify(err)));
+  });
+}
 </script>
 </body>
 </html>
